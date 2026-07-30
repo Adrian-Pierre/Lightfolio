@@ -1,0 +1,20 @@
+---
+import { url } from "../utils/url-utils";
+
+const target = url("/about/");
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta http-equiv="refresh" content={`0;url=${target}`} />
+		<link rel="canonical" href={target} />
+		<title>Redirecting...</title>
+		<script is:inline define:vars={{ target }}>
+			window.location.replace(target);
+		</script>
+	</head>
+	<body></body>
+</html>

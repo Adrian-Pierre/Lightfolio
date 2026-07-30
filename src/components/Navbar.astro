@@ -1,0 +1,245 @@
+---
+import { Icon } from "astro-icon/components";
+import { navBarConfig, siteConfig } from "../config";
+import { LinkPresets } from "../constants/link-presets";
+import { LinkPreset, type NavBarLink } from "../types/config";
+import { pathsEqual, url } from "../utils/url-utils";
+import Search from "./Search.svelte";
+import DisplaySettings from "./widget/DisplaySettings.svelte";
+import NavMenuPanel from "./widget/NavMenuPanel.astro";
+
+const className = Astro.props.class;
+
+let links: NavBarLink[] = navBarConfig.links.map(
+	(item: NavBarLink | LinkPreset): NavBarLink => {
+		if (typeof item === "number") {
+			return LinkPresets[item];
+		}
+		return item;
+	},
+);
+
+const currentPath = Astro.url.pathname;
+
+function isCurrentLink(link: NavBarLink) {
+	if (link.external) return false;
+
+	const linkPath = url(link.url);
+	if (pathsEqual(currentPath, linkPath)) return true;
+
+	return (
+		pathsEqual(linkPath, url("/home/")) && currentPath.startsWith(url("/home/"))
+	);
+}
+---
+<div id="navbar" class="z-50 onload-animation">
+    <div class:list={[
+        className,
+        "card-base !overflow-visible max-w-[var(--page-width)] h-[4.35rem] sm:h-[4.75rem] mx-auto flex items-center justify-between px-2.5 sm:px-3 md:px-4"]}>
+        <a href={url('/about/')} class="btn-plain scale-animation rounded-[1.1rem] h-[3.25rem] sm:h-[3.5rem] px-3 sm:px-4 active:scale-[0.98]">
+            <div class="flex flex-col items-start leading-none">
+                <span
+                    class="text-[0.62rem] sm:text-[0.68rem] font-semibold uppercase tracking-[0.24em] sm:tracking-[0.32em] text-[var(--primary)]/85 mb-1"
+                    data-lang-zh="博客"
+                    data-lang-en="Notebook"
+                >Notebook</span>
+                <span class="text-[0.95rem] md:text-[1.05rem] font-semibold text-[var(--deep-text)]">{siteConfig.title}</span>
+            </div>
+        </a>
+        <div class="hidden md:flex items-center gap-1">
+            {links.map((l) => {
+                const current = isCurrentLink(l);
+                return <a aria-label={l.name} href={l.external ? l.url : url(l.url)} target={l.external ? "_blank" : null}
+                          aria-current={current ? "page" : undefined}
+                          data-nav-target={!l.external ? url(l.url) : undefined}
+                          class:list={["btn-plain nav-link scale-animation rounded-full h-11 px-4 text-[0.95rem] font-semibold active:scale-[0.98]", {"is-current-nav": current}]}
+                >
+                    <div class="flex items-center">
+                        {l.name}
+                        {l.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-[1px] ml-1 text-black/[0.2]"></Icon>}
+                    </div>
+                </a>;
+            })}
+        </div>
+        <div class="flex">
+            <!--<SearchPanel client:load>-->
+            <Search client:only="svelte"></Search>
+            {!siteConfig.themeColor.fixed && (
+                    <button
+                        aria-label="主题色设置"
+                        data-lang-aria-label-zh="主题色设置"
+                        data-lang-aria-label-en="Display settings"
+                        class="btn-plain scale-animation rounded-full h-11 w-11 active:scale-90"
+                        id="display-settings-switch"
+                    >
+                        <Icon name="material-symbols:palette-outline" class="text-[1.25rem]"></Icon>
+                    </button>
+            )}
+            <button
+                aria-label="菜单"
+                data-lang-aria-label-zh="菜单"
+                data-lang-aria-label-en="Menu"
+                name="Nav Menu"
+                class="btn-plain scale-animation rounded-full w-11 h-11 active:scale-90 md:!hidden"
+                id="nav-menu-switch"
+            >
+                <Icon name="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
+            </button>
+        </div>
+        <NavMenuPanel links={links}></NavMenuPanel>
+        <DisplaySettings client:only="svelte"></DisplaySettings>
+    </div>
+</div>
+
+<script>
+function loadButtonScript() {
+    let settingBtn = document.getElementById("display-settings-switch");
+    if (settingBtn) {
+        settingBtn.onclick = function () {
+            let settingPanel = document.getElementById("display-setting");
+            if (settingPanel) {
+                settingPanel.classList.toggle("float-panel-closed");
+            }
+        };
+    }
+
+    let menuBtn = document.getElementById("nav-menu-switch");
+    if (menuBtn) {
+        menuBtn.onclick = function () {
+            let menuPanel = document.getElementById("nav-menu-panel");
+            if (menuPanel) {
+                menuPanel.classList.toggle("float-panel-closed");
+            }
+        };
+    }
+}
+
+loadButtonScript();
+</script>
+
+<script is:inline define:vars={{ homePath: url("/home/") }}>
+const navbarRuntime = (window.__lightfolioNavbarRuntime ??= {
+	initialized: false,
+});
+
+function normalizeNavPath(path) {
+	return `/${String(path || "").replace(/^\/|\/$/g, "").toLowerCase()}/`;
+}
+
+function isCurrentNavPath(currentPath, targetPath) {
+	const normalizedCurrent = normalizeNavPath(currentPath);
+	const normalizedTarget = normalizeNavPath(targetPath);
+
+	if (normalizedCurrent === normalizedTarget) return true;
+	return normalizedTarget === normalizeNavPath(homePath) && normalizedCurrent.startsWith(normalizedTarget);
+}
+
+function syncCurrentNavbarLink() {
+	const currentPath = window.location.pathname;
+	document.querySelectorAll("[data-nav-target]").forEach((link) => {
+		if (!(link instanceof HTMLElement)) return;
+
+		const targetPath = link.dataset.navTarget;
+		const current = isCurrentNavPath(currentPath, targetPath);
+		link.classList.toggle("is-current-nav", current);
+
+		if (current) {
+			link.setAttribute("aria-current", "page");
+		} else {
+			link.removeAttribute("aria-current");
+		}
+	});
+}
+
+function bindNavbarRouteSync() {
+	if (navbarRuntime.initialized) return;
+	navbarRuntime.initialized = true;
+
+	syncCurrentNavbarLink();
+
+	if (window.swup?.hooks) {
+		window.swup.hooks.on("page:view", syncCurrentNavbarLink);
+		return;
+	}
+
+	document.addEventListener(
+		"swup:enable",
+		() => {
+			window.swup?.hooks?.on("page:view", syncCurrentNavbarLink);
+			syncCurrentNavbarLink();
+		},
+		{ once: true },
+	);
+}
+
+bindNavbarRouteSync();
+</script>
+
+<style>
+	.nav-link {
+		position: relative;
+	}
+
+	.nav-link::after {
+		content: "";
+		position: absolute;
+		left: 1rem;
+		right: 1rem;
+		bottom: 0.5rem;
+		height: 2.5px;
+		border-radius: 999px;
+		background: linear-gradient(90deg, rgba(125, 191, 175, 0.88), rgba(164, 206, 255, 0.9));
+		opacity: 0;
+		transform: scaleX(0.45);
+		transform-origin: center;
+		transition:
+			opacity var(--page-transition-duration-fast) ease,
+			transform var(--page-transition-duration-fast) var(--page-transition-easing);
+	}
+
+	.nav-link:hover::after,
+	.nav-link.is-current-nav::after {
+		opacity: 1;
+		transform: scaleX(1);
+	}
+
+	.nav-link.is-current-nav {
+		color: var(--primary);
+	}
+</style>
+
+{import.meta.env.PROD && <script is:inline define:vars={{scriptUrl: url('/pagefind/pagefind.js')}}>
+async function loadPagefind() {
+    try {
+        const response = await fetch(scriptUrl, { method: 'HEAD' });
+        if (!response.ok) {
+            throw new Error(`Pagefind script not found: ${response.status}`);
+        }
+
+        const pagefind = await import(scriptUrl);
+
+        await pagefind.options({
+            excerptLength: 20
+        });
+
+        window.pagefind = pagefind;
+
+        document.dispatchEvent(new CustomEvent('pagefindready'));
+        console.log('Pagefind loaded and initialized successfully, event dispatched.');
+    } catch (error) {
+        console.error('Failed to load Pagefind:', error);
+        window.pagefind = {
+            search: () => Promise.resolve({ results: [] }),
+            options: () => Promise.resolve(),
+        };
+        document.dispatchEvent(new CustomEvent('pagefindloaderror'));
+        console.log('Pagefind load error, event dispatched.');
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadPagefind);
+} else {
+    loadPagefind();
+}
+</script>}

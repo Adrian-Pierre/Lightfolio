@@ -1,0 +1,194 @@
+---
+import type { CollectionEntry } from "astro:content";
+import path from "node:path";
+import { Icon } from "astro-icon/components";
+import { getDir } from "../utils/url-utils";
+import ImageWrapper from "./misc/ImageWrapper.astro";
+import PostMetadata from "./PostMeta.astro";
+
+interface Props {
+	class?: string;
+	entry: CollectionEntry<"posts">;
+	title: string;
+	url: string;
+	published: Date;
+	updated?: Date;
+	tags: string[];
+	category: string | null;
+	image: string;
+	description: string;
+	draft: boolean;
+	style: string;
+}
+const {
+	entry,
+	title,
+	url,
+	published,
+	updated,
+	tags,
+	category,
+	image,
+	description,
+	style,
+} = Astro.props;
+const className = Astro.props.class;
+
+const hasCover = image !== undefined && image !== null && image !== "";
+
+const coverWidth = "31%";
+const normalizedCategory = category?.trim().toLocaleLowerCase();
+const displayTags = (tags ?? []).reduce<string[]>((acc, tag) => {
+	const trimmedTag = tag.trim();
+	if (!trimmedTag) return acc;
+
+	const normalizedTag = trimmedTag.toLocaleLowerCase();
+	if (normalizedTag === normalizedCategory) return acc;
+	if (
+		acc.some((existingTag) => existingTag.toLocaleLowerCase() === normalizedTag)
+	)
+		return acc;
+
+	acc.push(trimmedTag);
+	return acc;
+}, []);
+const primaryTag = displayTags[0] || category?.trim() || "";
+
+const { remarkPluginFrontmatter } = await entry.render();
+const wordUnitZh = "字";
+const wordUnitEn = remarkPluginFrontmatter.words === 1 ? "word" : "words";
+---
+<article class:list={["post-card card-base flex w-full flex-col gap-4 p-3.5 sm:p-4 md:flex-row md:items-stretch md:gap-5 md:p-5", className]} style={style}>
+    <div class:list={["flex min-w-0 flex-col justify-between gap-4", {"w-full": !hasCover, "md:w-[calc(100%_-_var(--coverWidth))]": hasCover}]}>
+        <div class="flex min-w-0 items-center gap-2 text-[0.68rem] sm:text-[0.72rem] font-semibold uppercase tracking-[0.16em] sm:tracking-[0.22em] text-[var(--primary)]/80">
+            <span data-lang-zh="文章" data-lang-en="Article">Article</span>
+            <div class="h-1 w-1 rounded-full bg-[var(--primary)]/50"></div>
+            {primaryTag ? (
+                <span class="min-w-0 truncate">{primaryTag}</span>
+            ) : (
+                <span data-lang-zh="笔记" data-lang-en="Notes">Notes</span>
+            )}
+        </div>
+
+        <div>
+            <a href={url}
+               class="post-card-title transition block w-full font-semibold mb-3 text-[1.35rem] sm:text-[1.55rem] md:text-[1.7rem] leading-[1.22] text-[var(--deep-text)]
+            hover:text-[var(--primary)] active:text-[var(--title-active)]">
+                {title}
+            </a>
+
+            <PostMetadata published={published} updated={updated} tags={displayTags} category={category} hideTagsForMobile={true} hideUpdateDate={true} class="mb-4"></PostMetadata>
+
+            <div class:list={["post-card-excerpt transition text-75 text-[0.94rem] leading-7 md:text-base md:pr-2", {"line-clamp-3": !description}]}>
+                {description || remarkPluginFrontmatter.excerpt}
+            </div>
+        </div>
+
+        <div class="post-card-foot flex flex-wrap items-center gap-3 text-[0.82rem] font-medium uppercase tracking-[0.16em] text-30 transition">
+            <div class="post-card-wordcount">
+                {remarkPluginFrontmatter.words} <span data-lang-zh={wordUnitZh} data-lang-en={wordUnitEn}>{wordUnitZh}</span>
+            </div>
+        </div>
+    </div>
+
+    {hasCover && <a href={url} aria-label={title}
+                    class="post-card-cover group relative overflow-hidden rounded-[1.1rem] sm:rounded-[1.35rem] md:w-[var(--coverWidth)] min-h-[11.5rem] sm:min-h-[14rem] md:min-h-0 active:scale-[0.99]">
+        <div class="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-black/15 to-transparent opacity-70 transition group-hover:opacity-90"></div>
+        <div class="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
+            <Icon name="material-symbols:chevron-right-rounded"
+                  class="transition opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 text-white text-5xl">
+            </Icon>
+        </div>
+        <ImageWrapper src={image} basePath={path.join("content/posts/", getDir(entry.id))} alt="Cover Image of the Post"
+                  class="h-full w-full">
+        </ImageWrapper>
+    </a>}
+
+    {!hasCover &&
+        <a href={url} aria-label={title} class="post-card-arrow hidden md:flex btn-regular w-[3.5rem] shrink-0 rounded-[1.15rem] active:scale-[0.98]">
+            <Icon name="material-symbols:chevron-right-rounded"
+                  class="transition text-[var(--primary)] text-4xl mx-auto">
+            </Icon>
+        </a>
+    }
+</article>
+
+<style define:vars={{coverWidth}}>
+	.post-card {
+		position: relative;
+		isolation: isolate;
+		border-color: color-mix(in srgb, var(--card-border) 88%, transparent);
+	}
+
+	.post-card::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background:
+			radial-gradient(circle at 88% 16%, rgba(125, 191, 175, 0.12), transparent 20rem),
+			radial-gradient(circle at 4% 100%, rgba(194, 225, 255, 0.08), transparent 18rem);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity var(--page-transition-duration-fast) ease;
+	}
+
+	.post-card:hover {
+		transform: translateY(-4px);
+		border-color: color-mix(in srgb, var(--primary) 18%, var(--card-border));
+		box-shadow: 0 36px 70px -52px rgba(24, 51, 56, 0.26);
+	}
+
+	.post-card:hover::after {
+		opacity: 1;
+	}
+
+	.post-card-title {
+		text-wrap: balance;
+	}
+
+	.post-card-excerpt {
+		max-width: 100%;
+	}
+
+	.post-card-foot {
+		position: relative;
+		z-index: 1;
+	}
+
+	.post-card-wordcount {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
+		padding: 0.5rem 0.82rem;
+		border-radius: 999px;
+		border: 1px solid var(--line-divider);
+		background: rgba(255, 255, 255, 0.46);
+		box-shadow: 0 12px 26px -24px rgba(24, 51, 56, 0.24);
+	}
+
+	.post-card-cover {
+		box-shadow: 0 24px 46px -36px rgba(24, 51, 56, 0.3);
+	}
+
+	.post-card-cover::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border: 1px solid rgba(255, 255, 255, 0.26);
+		border-radius: inherit;
+		pointer-events: none;
+	}
+
+	.post-card-cover :global(img) {
+		transition: transform var(--page-transition-duration-slow) var(--page-transition-easing);
+	}
+
+	.post-card:hover .post-card-cover :global(img) {
+		transform: scale(1.04);
+	}
+
+	.post-card:hover .post-card-arrow {
+		transform: translateX(2px);
+	}
+
+</style>

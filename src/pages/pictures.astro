@@ -1,0 +1,27 @@
+---
+import Footer from "@components/Footer.astro";
+import Navbar from "@components/Navbar.astro";
+import PicturesBoard from "@components/PicturesBoard.astro";
+import Layout from "@layouts/Layout.astro";
+import { siteConfig } from "@/config";
+import { pictures } from "@/data/pictures";
+---
+
+<Layout title="相册" description="A draggable gallery board built from linked images.">
+	<div class="relative z-20 mx-auto max-w-[var(--page-width)] px-4 md:px-5">
+		<div hidden data-lang-document-title-zh={`相册 - ${siteConfig.title}`} data-lang-document-title-en={`Gallery - ${siteConfig.title}`}></div>
+		<div class="pt-4">
+			<div id="navbar-wrapper" class="sticky top-4 z-40">
+				<Navbar />
+			</div>
+		</div>
+
+		<main class="transition-swup-fade pb-3 pt-4 md:pb-5">
+			<PicturesBoard entries={pictures} />
+		</main>
+
+		<div class="onload-animation">
+			<Footer />
+		</div>
+	</div>
+</Layout>

@@ -1,0 +1,94 @@
+/* utils */
+white(a)
+  rgba(255, 255, 255, a)
+
+black(a)
+  rgba(0, 0, 0, a)
+
+rainbow = linear-gradient(to right, oklch(0.80 0.10 0), oklch(0.80 0.10 30), oklch(0.80 0.10 60), oklch(0.80 0.10 90), oklch(0.80 0.10 120), oklch(0.80 0.10 150), oklch(0.80 0.10 180), oklch(0.80 0.10 210), oklch(0.80 0.10 240), oklch(0.80 0.10 270), oklch(0.80 0.10 300), oklch(0.80 0.10 330), oklch(0.80 0.10 360))
+
+:root
+  --radius-large 1.4rem
+  --content-delay 140ms
+  --page-transition-duration 260ms
+  --page-transition-duration-fast 220ms
+  --page-transition-duration-slow 320ms
+  --page-transition-easing cubic-bezier(0.22, 1, 0.36, 1)
+  --page-transition-distance 0.9rem
+
+define(vars)
+  :root
+    for key, value in vars
+      {key}: value[0]
+
+define({
+  --primary: #7dbfaf
+  --page-bg: #f4f1ef
+  --card-bg: rgba(255, 251, 252, 0.8)
+  --card-border: rgba(255, 255, 255, 0.94)
+
+  --btn-content: #658f88
+
+  --btn-regular-bg: rgba(255, 248, 250, 0.64)
+  --btn-regular-bg-hover: rgba(255, 252, 253, 0.92)
+  --btn-regular-bg-active: rgba(246, 238, 241, 0.96)
+
+  --btn-plain-bg-hover: rgba(125, 191, 175, 0.1)
+  --btn-plain-bg-active: rgba(125, 191, 175, 0.16)
+
+  --btn-card-bg-hover: rgba(255, 252, 252, 0.94)
+  --btn-card-bg-active: rgba(245, 239, 240, 0.98)
+
+  --enter-btn-bg: var(--btn-regular-bg)
+  --enter-btn-bg-hover: var(--btn-regular-bg-hover)
+  --enter-btn-bg-active: var(--btn-regular-bg-active)
+
+  --deep-text: #47575f
+
+  --title-active: #6aa99e
+
+  --line-divider: rgba(78, 95, 102, 0.12)
+
+  --line-color: rgba(78, 95, 102, 0.15)
+  --meta-divider: rgba(78, 95, 102, 0.22)
+
+  --inline-code-bg: rgba(240, 196, 208, 0.12)
+  --inline-code-color: #8a6f88
+  --selection-bg: rgba(125, 191, 175, 0.18)
+  --codeblock-selection: rgba(125, 191, 175, 0.22)
+  --codeblock-bg: #faf7f6
+  --codeblock-topbar-bg: #f1ecea
+  --codeblock-border: rgba(90, 103, 108, 0.14)
+  --codeblock-copy-bg: rgba(255, 252, 252, 0.92)
+  --codeblock-copy-bg-hover: rgba(255, 255, 255, 0.98)
+  --codeblock-copy-icon: #66757b
+  --codeblock-badge-bg: rgba(255, 250, 251, 0.94)
+  --codeblock-badge-text: #7b8fa7
+  --codeblock-line-number: rgba(86, 100, 107, 0.28)
+
+  --license-block-bg: rgba(125, 191, 175, 0.05)
+
+  --link-underline: rgba(125, 191, 175, 0.24)
+  --link-hover: #7dbfaf
+  --link-active: #8cb6d9
+
+  --float-panel-bg: rgba(255, 252, 252, 0.86)
+
+  --scrollbar-bg: black(0.4)
+  --scrollbar-bg-hover: black(0.5)
+  --scrollbar-bg-active: black(0.6)
+
+  --color-selection-bar: rainbow
+
+  --admonitions-color-tip: oklch(0.76 0.09 175)
+  --admonitions-color-note: oklch(0.77 0.08 255)
+  --admonitions-color-important: oklch(0.78 0.08 330)
+  --admonitions-color-warning: oklch(0.8 0.08 75)
+  --admonitions-color-caution: oklch(0.74 0.11 32)
+
+  --toc-badge-bg: rgba(125, 191, 175, 0.12)
+  --toc-btn-hover: rgba(255, 252, 252, 0.9)
+  --toc-btn-active: rgba(244, 238, 240, 0.95)
+  --toc-width: calc((100vw - var(--page-width)) / 2 - 1rem)
+  --toc-item-active: rgba(125, 191, 175, 0.15)
+})

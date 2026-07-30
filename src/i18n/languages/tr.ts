@@ -1,0 +1,34 @@
+import Key from "../i18nKey";
+import type { Translation } from "../translation";
+
+export const tr: Translation = {
+	[Key.home]: "Anasayfa",
+	[Key.about]: "Hakkında",
+	[Key.archive]: "Arşiv",
+	[Key.friends]: "Arkadaşlar",
+	[Key.search]: "Ara",
+
+	[Key.tags]: "Taglar",
+	[Key.categories]: "Katagoriler",
+	[Key.recentPosts]: "Son Paylaşımlar",
+
+	[Key.untitled]: "Başlıksız",
+	[Key.uncategorized]: "Katagorisiz",
+	[Key.noTags]: "Tag Bulunamadı",
+
+	[Key.wordCount]: "kelime",
+	[Key.wordsCount]: "kelime",
+	[Key.minuteCount]: "dakika",
+	[Key.minutesCount]: "dakika",
+	[Key.postCount]: "gönderi",
+	[Key.postsCount]: "gönderiler",
+
+	[Key.themeColor]: "Tema Rengi",
+
+	[Key.more]: "Daha Fazla",
+	[Key.collapse]: "Daralt",
+
+	[Key.author]: "Yazar",
+	[Key.publishedAt]: "Yayınlanma:",
+	[Key.license]: "Lisans",
+};

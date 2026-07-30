@@ -1,0 +1,99 @@
+---
+import { Icon } from "astro-icon/components";
+import { formatDateToYYYYMMDD } from "../utils/date-utils";
+import { getCategoryUrl, getTagUrl } from "../utils/url-utils";
+
+interface Props {
+	class: string;
+	published: Date;
+	updated?: Date;
+	tags: string[];
+	category: string | null;
+	hideTagsForMobile?: boolean;
+	hideUpdateDate?: boolean;
+}
+const {
+	published,
+	updated,
+	tags,
+	category,
+	hideTagsForMobile = false,
+	hideUpdateDate = false,
+} = Astro.props;
+const className = Astro.props.class;
+
+const normalizedCategory = category?.trim().toLocaleLowerCase();
+const displayTags = (tags ?? []).reduce<string[]>((acc, tag) => {
+	const trimmedTag = tag.trim();
+	if (!trimmedTag) return acc;
+
+	const normalizedTag = trimmedTag.toLocaleLowerCase();
+	if (normalizedTag === normalizedCategory) return acc;
+	if (
+		acc.some((existingTag) => existingTag.toLocaleLowerCase() === normalizedTag)
+	)
+		return acc;
+
+	acc.push(trimmedTag);
+	return acc;
+}, []);
+---
+
+<div class:list={["flex flex-wrap items-center gap-3 gap-y-3 text-neutral-500", className]}>
+    <!-- publish date -->
+    <div class="meta-pill">
+        <div class="meta-icon"
+        >
+            <Icon name="material-symbols:calendar-today-outline-rounded" class="text-xl"></Icon>
+        </div>
+        <span class="text-50 text-sm font-medium">{formatDateToYYYYMMDD(published)}</span>
+    </div>
+
+    <!-- update date -->
+    {!hideUpdateDate && updated && updated.getTime() !== published.getTime() && (
+        <div class="flex items-center">
+            <div class="meta-icon"
+            >
+                <Icon name="material-symbols:edit-calendar-outline-rounded" class="text-xl"></Icon>
+            </div>
+            <span class="text-50 text-sm font-medium">{formatDateToYYYYMMDD(updated)}</span>
+        </div>
+    )}
+
+    <!-- categories -->
+    <div class="meta-pill">
+        <div class="meta-icon"
+        >
+            <Icon name="material-symbols:book-2-outline-rounded" class="text-xl"></Icon>
+        </div>
+        <div class="flex flex-row flex-nowrap items-center">
+            <a href={getCategoryUrl(category)} aria-label={`View all posts in the ${category} category`}
+               class="link-lg transition text-50 text-sm font-medium
+                            hover:text-[var(--primary)] whitespace-nowrap">
+                {category || <span data-lang-zh="未分类" data-lang-en="Uncategorized">未分类</span>}
+            </a>
+        </div>
+    </div>
+
+    <!-- tags -->
+    <div class:list={["items-center gap-2", {"flex flex-wrap": !hideTagsForMobile, "hidden md:flex md:flex-wrap": hideTagsForMobile}]}>
+        {displayTags.length > 0 && (
+            <div class="meta-pill">
+                <div class="meta-icon"
+                >
+                    <Icon name="material-symbols:tag-rounded" class="text-xl"></Icon>
+                </div>
+                <span class="text-50 text-sm font-medium" data-lang-zh="标签" data-lang-en="Tags">标签</span>
+            </div>
+        )}
+        <div class="flex flex-row flex-wrap items-center gap-2">
+            {displayTags.length > 0 && displayTags.map((tag) => (
+                <a href={getTagUrl(tag)} aria-label={`View all posts with the ${tag.trim()} tag`}
+                   class="tag-chip whitespace-nowrap">
+                    {tag.trim()}
+                </a>
+            ))}
+            {displayTags.length === 0 && <div class="transition text-50 text-sm font-medium" data-lang-zh="无标签" data-lang-en="No Tags">无标签</div>}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,203 @@
+@tailwind components;
+
+html {
+    color: var(--deep-text);
+    font-family: "Avenir Next", "PingFang SC", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background:
+        radial-gradient(circle at 0% 0%, rgba(236, 202, 213, 0.16), transparent 27rem),
+        radial-gradient(circle at 100% 0%, rgba(200, 224, 242, 0.14), transparent 22rem),
+        radial-gradient(circle at 50% 100%, rgba(206, 232, 223, 0.12), transparent 30rem),
+        linear-gradient(180deg, #fcfbfa 0%, var(--page-bg) 44%, #f6f2f1 100%);
+    background-attachment: fixed;
+}
+
+body {
+    background: transparent;
+    color: var(--deep-text);
+}
+
+@layer components {
+    .card-base {
+        @apply rounded-[var(--radius-large)] overflow-hidden border bg-[var(--card-bg)] transition;
+        border-color: var(--card-border);
+        box-shadow: 0 32px 64px -44px rgba(73, 83, 96, 0.22);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        transition-property: background-color, border-color, box-shadow, transform, opacity;
+        transition-duration: var(--page-transition-duration);
+        transition-timing-function: var(--page-transition-easing);
+    }
+    h1, h2, h3, h4, h5, h6, p, a, span, li, ul, ol, blockquote, code, pre, table, th, td, strong {
+        @apply transition;
+    }
+    .card-shadow {
+        @apply drop-shadow-[0_2px_4px_rgba(0,0,0,0.005)]
+    }
+    .expand-animation {
+        @apply relative before:ease-out before:transition active:bg-none hover:before:bg-[var(--btn-plain-bg-hover)] active:before:bg-[var(--btn-plain-bg-active)] z-0
+        before:absolute before:rounded-[inherit] before:inset-0 before:scale-[0.85] hover:before:scale-100 before:-z-10
+    }
+    .link {
+        @apply transition rounded-xl p-1 -m-1 expand-animation;
+    }
+    .link-lg {
+        @apply transition rounded-xl p-1.5 -m-1.5 expand-animation;
+    }
+    .float-panel {
+        @apply top-[5.25rem] rounded-[var(--radius-large)] overflow-hidden bg-[var(--float-panel-bg)] transition shadow-xl border
+    }
+    .float-panel {
+        border-color: var(--card-border);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+    .float-panel-closed {
+        @apply -translate-y-1 opacity-0 pointer-events-none
+    }
+    .search-panel mark {
+        @apply bg-transparent text-[var(--primary)]
+    }
+
+    .btn-card {
+        @apply transition flex items-center justify-center border bg-[var(--card-bg)] hover:bg-[var(--btn-card-bg-hover)]
+        active:bg-[var(--btn-card-bg-active)]
+    }
+    .btn-card {
+        border-color: var(--card-border);
+        box-shadow: 0 24px 48px -40px rgba(73, 83, 96, 0.22);
+    }
+    .btn-card.disabled {
+        @apply pointer-events-none text-black/10
+    }
+    .btn-plain {
+        @apply transition relative flex items-center justify-center bg-none
+        text-black/75 hover:text-[var(--primary)];
+        &:not(.scale-animation) {
+            @apply hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)]
+        }
+        &.scale-animation {
+            @apply expand-animation;
+        }
+    }
+    .btn-regular {
+        @apply transition flex items-center justify-center border bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] active:bg-[var(--btn-regular-bg-active)]
+        text-[var(--btn-content)]
+    }
+    .btn-regular {
+        border-color: var(--card-border);
+    }
+
+    .link-underline {
+        @apply transition underline decoration-2 decoration-dashed decoration-[var(--link-underline)]
+        hover:decoration-[var(--link-hover)] active:decoration-[var(--link-active)] underline-offset-[0.25rem]
+    }
+
+    .toc-hide,
+    .toc-not-ready {
+        @apply opacity-0 pointer-events-none
+    }
+
+    #toc-inner-wrapper {
+        mask-image: linear-gradient(to bottom, transparent 0%, black 2rem, black calc(100% - 2rem), transparent 100%);
+    }
+
+    .hide-scrollbar {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .text-90 {
+        @apply text-black/90
+    }
+    .text-75 {
+        @apply text-black/75
+    }
+    .text-50 {
+        @apply text-black/50
+    }
+    .text-30 {
+        @apply text-black/30
+    }
+    .text-25 {
+        @apply text-black/25
+    }
+
+    .meta-icon {
+        @apply w-7 h-7 transition rounded-full flex items-center justify-center bg-[var(--btn-plain-bg-hover)]
+        text-[var(--btn-content)] mr-2
+    }
+    .meta-pill {
+        @apply flex items-center rounded-full border px-1.5 pr-3 py-1;
+        border-color: var(--line-divider);
+        background: var(--btn-regular-bg);
+    }
+    .tag-chip {
+        @apply inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium transition;
+        border-color: var(--line-divider);
+        background: var(--btn-regular-bg);
+        color: var(--deep-text);
+    }
+    .with-divider {
+        @apply before:content-['/'] before:ml-1.5 before:mr-1.5 before:text-[var(--meta-divider)] before:text-sm
+        before:font-medium before:first-of-type:hidden before:transition
+    }
+
+}
+
+.btn-card:hover {
+    transform: translateY(-2px);
+}
+
+.tag-chip:hover {
+    background: var(--btn-regular-bg-hover);
+    color: var(--primary);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--primary) 52%, white 18%);
+    outline-offset: 2px;
+}
+
+.custom-md img, #post-cover img {
+    @apply cursor-zoom-in
+}
+
+::selection {
+    background-color: var(--selection-bg)
+}
+
+.dash-line {
+    position: relative;
+}
+
+.dash-line::before {
+    content: "";
+    position: absolute;
+    width: 10%;
+    height: 100%;
+    left: calc(50% - 1px);
+    border-left: 2px dashed var(--line-color);
+    pointer-events: none;
+    transition: all 0.3s;
+    transform: translateY(-50%);
+}
+
+.collapsed {
+    height: var(--collapsedHeight);
+}
+
+.custom-md spoiler {
+  @apply bg-[var(--codeblock-bg)] hover:bg-transparent px-1 py-0.5 overflow-hidden rounded-md transition-all duration-150;
+
+  &:not(:hover) {
+    color: var(--codeblock-bg);
+    * {
+        color: var(--codeblock-bg);
+    }
+  }
+}

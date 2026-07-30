@@ -1,0 +1,190 @@
+.custom-md {
+    @apply text-[1rem] leading-8;
+    color: rgba(51, 79, 82, 0.88);
+    letter-spacing: 0.01em;
+
+    > :first-child {
+        margin-top: 0;
+    }
+
+    h1 {
+        @apply text-[1.9rem] leading-[1.22];
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-semibold text-[var(--deep-text)];
+
+        .anchor {
+            @apply transition -m-0.5 ml-[0.2ch] p-0.5 select-none opacity-0 no-underline !important;
+
+            .anchor-icon {
+                @apply mx-[0.45ch] !important;
+            }
+        }
+
+        &:hover {
+            .anchor {
+                @apply opacity-100 !important;
+            }
+        }
+    }
+
+    h1, h2 {
+        @apply mt-12 mb-6 text-[1.55rem] leading-[1.28];
+
+        &::before {
+            content: "#";
+            color: rgba(53, 191, 171, 0.72);
+            margin-right: 0.5rem;
+            font-weight: 700;
+        }
+    }
+
+    h1 {
+        @apply text-[1.95rem] leading-[1.18];
+    }
+
+    h3 {
+        @apply mt-10 mb-4 text-[1.18rem] leading-[1.35];
+
+        &::before {
+            content: "##";
+            color: rgba(53, 191, 171, 0.7);
+            margin-right: 0.5rem;
+            font-weight: 700;
+        }
+    }
+
+    h4 {
+        @apply mt-8 mb-3 text-[1.02rem] leading-[1.4];
+
+        &::before {
+            content: "###";
+            color: rgba(53, 191, 171, 0.64);
+            margin-right: 0.45rem;
+            font-weight: 700;
+        }
+    }
+
+    p,
+    ul,
+    ol,
+    blockquote,
+    table {
+        @apply my-5;
+    }
+
+    a:not(.no-styling) {
+        @apply relative bg-none font-medium text-[var(--primary)]
+        underline decoration-[var(--link-underline)] decoration-1 underline-offset-4;
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+    
+        &:hover, &:active {
+            color: var(--link-hover);
+            text-decoration-color: var(--link-hover);
+        }
+    }
+
+    code {
+        @apply bg-[var(--inline-code-bg)] text-[var(--inline-code-color)] px-1 py-0.5 rounded-md overflow-hidden;
+
+        font-family: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+        &:before {
+            content:none;
+        }
+        &:after {
+            content:none;
+        }
+
+        counter-reset: line;
+        span.line {
+            &:before {
+                color: var(--codeblock-line-number);
+                margin-right: 1rem;
+                width: 1rem;
+                display: inline-block;
+                content: counter(line);
+                counter-increment: line;
+                direction: rtl;
+            }
+            &:last-child:empty, &:last-child:has(> span:empty:only-child) {
+                display: none;
+            }
+        }
+    }
+
+    .copy-btn {
+        all: initial;
+        @apply opacity-0 absolute active:scale-90 h-8 w-8 top-3 right-3 text-sm rounded-xl transition-all ease-in-out z-20 cursor-pointer flex items-center justify-center;
+        background: var(--codeblock-copy-bg);
+        border: 1px solid var(--codeblock-border);
+        box-shadow: 0 16px 28px -22px rgba(24, 51, 56, 0.24);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    .frame:hover .copy-btn {
+        opacity: 1;
+        background: var(--codeblock-copy-bg-hover);
+    }
+
+    .copy-btn-icon {
+        @apply absolute top-1/2 left-1/2 transition -translate-x-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none;
+        fill: var(--codeblock-copy-icon);
+    }
+    .copy-btn .copy-icon {
+        @apply opacity-100;
+        fill: var(--codeblock-copy-icon);
+    }
+    .copy-btn.success .copy-icon {
+        @apply opacity-0;
+    }
+    .copy-btn .success-icon {
+        @apply opacity-0;
+        fill: var(--primary);
+    }
+    .copy-btn.success .success-icon {
+        @apply opacity-100
+    }
+
+    .expressive-code {
+        @apply my-4;
+        ::selection {
+            @apply bg-[var(--codeblock-selection)];
+        }
+    }
+
+
+    ul, ol {
+        li::marker {
+            @apply text-[var(--primary)];
+        }
+    }
+
+    blockquote {
+        @apply not-italic relative rounded-[1rem] px-5 py-4;
+        background: rgba(53, 191, 171, 0.06);
+        font-weight: inherit;
+
+        &:before {
+            @apply content-[''] absolute left-0 top-0 block transition bg-[var(--primary)] h-full w-1 rounded-full;
+        }
+
+        /* Remove the double quotes from default styles */
+        p:before, p:after {
+            @apply content-none;
+        }
+
+    }
+
+    .katex-display-container {
+        max-width: 100%;
+        overflow-x: auto;
+        margin: 1em 0;
+    }
+
+    table {
+        @apply w-full overflow-hidden rounded-[1rem];
+    }
+    
+}

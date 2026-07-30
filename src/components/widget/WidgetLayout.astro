@@ -1,0 +1,147 @@
+---
+interface Props {
+	id: string;
+	name?: string;
+	nameZh?: string;
+	nameEn?: string;
+	isCollapsed?: boolean;
+	collapsedHeight?: string;
+	class?: string;
+	style?: string;
+}
+const { id, name, nameZh, nameEn, isCollapsed, collapsedHeight, style } =
+	Astro.props;
+const className = Astro.props.class;
+
+const sectionNameZh = nameZh || name || "";
+const sectionNameEn = nameEn || name || "";
+const moreZh = "展开";
+const moreEn = "More";
+const collapseZh = "收起";
+const collapseEn = "Collapse";
+---
+<widget-layout data-id={id} data-is-collapsed={String(isCollapsed)} class={"pb-4 card-base " + className} style={style}>
+    <div
+        class="px-5 pt-5 pb-3 text-[0.74rem] font-semibold uppercase tracking-[0.26em] text-[var(--primary)]/85"
+        data-lang-zh={sectionNameZh}
+        data-lang-en={sectionNameEn}
+    >{sectionNameZh}</div>
+    <div id={id} class:list={["collapse-wrapper px-5 pt-1 overflow-hidden", {"collapsed": isCollapsed}]}>
+        <slot></slot>
+    </div>
+    {isCollapsed && <div class="expand-btn px-5 pt-3 -mb-1">
+        <button type="button" class="expand-toggle w-full h-10 rounded-full" aria-expanded="false">
+            <div class="flex items-center justify-center gap-2">
+                <span
+                    class="expand-text"
+                    data-more-label={moreZh}
+                    data-less-label={collapseZh}
+                    data-lang-data-more-label-zh={moreZh}
+                    data-lang-data-more-label-en={moreEn}
+                    data-lang-data-less-label-zh={collapseZh}
+                    data-lang-data-less-label-en={collapseEn}
+                    data-lang-zh={moreZh}
+                    data-lang-en={moreEn}
+                >{moreZh}</span>
+            </div>
+        </button>
+    </div>}
+</widget-layout>
+
+<style define:vars={{ collapsedHeight }}>
+    .collapsed {
+        height: var(--collapsedHeight);
+    }
+
+    .expand-toggle {
+        border: 1px solid var(--line-divider);
+        background: var(--btn-regular-bg);
+        color: var(--primary);
+        font-size: 0.92rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        transition:
+            background-color 0.18s ease,
+            border-color 0.18s ease,
+            color 0.18s ease,
+            transform 0.18s ease,
+            box-shadow 0.18s ease;
+    }
+
+    .expand-toggle:hover {
+        background: var(--btn-regular-bg-hover);
+        border-color: color-mix(in srgb, var(--primary) 24%, transparent);
+        box-shadow: 0 12px 24px -20px rgba(24, 51, 56, 0.35);
+    }
+
+    .expand-toggle:active {
+        background: var(--btn-regular-bg-active);
+        transform: scale(0.985);
+    }
+</style>
+
+<script>
+    const cleanupFnsMap = new WeakMap();
+
+    class WidgetLayout extends HTMLElement {
+        connectedCallback() {
+            if (this.dataset.isCollapsed !== "true") {
+                return;
+            }
+
+            const id = this.dataset.id;
+            const wrapper = this.querySelector(`#${id}`);
+            const toggleBtn = this.querySelector('.expand-toggle');
+            const expandText = this.querySelector('.expand-text');
+
+            if (!(wrapper instanceof HTMLElement) || !(toggleBtn instanceof HTMLButtonElement)) {
+                return;
+            }
+
+            const syncState = () => {
+                const collapsed = wrapper.classList.contains('collapsed');
+                toggleBtn.setAttribute('aria-expanded', String(!collapsed));
+
+                if (expandText instanceof HTMLElement) {
+                    expandText.textContent = collapsed
+                        ? expandText.dataset.moreLabel || ''
+                        : expandText.dataset.lessLabel || '';
+                }
+            };
+
+            const onToggle = () => {
+                wrapper.classList.toggle('collapsed');
+                syncState();
+            };
+
+            const onLanguageChange = () => {
+                syncState();
+            };
+
+            toggleBtn.addEventListener('click', onToggle);
+            window.addEventListener('ui-language:change', onLanguageChange);
+
+            const cleanupFns = [
+                () => toggleBtn.removeEventListener('click', onToggle),
+                () => window.removeEventListener('ui-language:change', onLanguageChange),
+            ];
+            cleanupFnsMap.set(this, cleanupFns);
+
+            syncState();
+        }
+
+        disconnectedCallback() {
+            const cleanupFns = cleanupFnsMap.get(this) || [];
+            for (const cleanup of cleanupFns) {
+                if (typeof cleanup === 'function') {
+                    cleanup();
+                }
+            }
+            cleanupFnsMap.delete(this);
+        }
+    }
+
+    if (!customElements.get("widget-layout")) {
+        customElements.define("widget-layout", WidgetLayout);
+    }
+</script>

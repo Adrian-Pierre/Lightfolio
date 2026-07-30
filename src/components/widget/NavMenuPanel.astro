@@ -1,0 +1,60 @@
+---
+import { Icon } from "astro-icon/components";
+import { type NavBarLink } from "../../types/config";
+import { pathsEqual, url } from "../../utils/url-utils";
+
+interface Props {
+	links: NavBarLink[];
+}
+
+const links = Astro.props.links;
+const currentPath = Astro.url.pathname;
+
+function isCurrentLink(link: NavBarLink) {
+	if (link.external) return false;
+
+	const linkPath = url(link.url);
+	if (pathsEqual(currentPath, linkPath)) return true;
+
+	return (
+		pathsEqual(linkPath, url("/home/")) && currentPath.startsWith(url("/home/"))
+	);
+}
+---
+<div id="nav-menu-panel" class:list={["float-panel float-panel-closed absolute transition-all fixed right-4 px-2 py-2"]}>
+    {links.map((link) => {
+        const current = isCurrentLink(link);
+        return <a href={link.external ? link.url : url(link.url)} class:list={["nav-menu-link group flex justify-between items-center py-2 pl-3 pr-1 rounded-lg gap-8 transition", {
+            "is-current-nav-menu": current,
+            "hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)]": !current,
+        }]}
+           target={link.external ? "_blank" : null}
+           aria-current={current ? "page" : undefined}
+           data-nav-target={!link.external ? url(link.url) : undefined}
+        >
+            <div class:list={["nav-menu-label transition font-bold", {
+                "text-black/75 group-hover:text-[var(--primary)] group-active:text-[var(--primary)]": !current,
+            }]}>
+                {link.name}
+            </div>
+            {!link.external && <Icon name="material-symbols:chevron-right-rounded"
+                  class="nav-menu-icon transition text-[1.25rem] text-[var(--primary)]"
+            >
+            </Icon>}
+            {link.external && <Icon name="fa6-solid:arrow-up-right-from-square"
+                  class="transition text-[0.75rem] text-black/25 -translate-x-1"
+            >
+            </Icon>}
+        </a>
+    })}
+</div>
+
+<style>
+	.nav-menu-link.is-current-nav-menu {
+		background: var(--btn-plain-bg-hover);
+	}
+
+	.nav-menu-link.is-current-nav-menu .nav-menu-label {
+		color: var(--primary);
+	}
+</style>

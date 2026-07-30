@@ -1,0 +1,42 @@
+---
+import { Icon } from "astro-icon/components";
+import { profileConfig } from "../../config";
+import { url } from "../../utils/url-utils";
+import ImageWrapper from "../misc/ImageWrapper.astro";
+
+const config = profileConfig;
+---
+<div class="card-base p-5">
+    <a
+       aria-label="前往关于页"
+       data-lang-aria-label-zh="前往关于页"
+       data-lang-aria-label-en="Go to about page"
+       href={url('/about/')}
+       class="group block relative mx-auto mt-1 lg:mx-0 lg:mt-0 mb-4
+       max-w-[12rem] lg:max-w-none overflow-hidden rounded-[1.35rem] active:scale-[0.98]">
+        <div class="absolute transition pointer-events-none group-hover:bg-black/30 group-active:bg-black/50
+        w-full h-full z-50 flex items-center justify-center">
+            <Icon name="fa6-regular:address-card"
+                  class="transition opacity-0 scale-90 group-hover:scale-100 group-hover:opacity-100 text-white text-5xl">
+            </Icon>
+        </div>
+        <ImageWrapper src={config.avatar || ""} alt="Profile Image of the Author" class="mx-auto lg:w-full h-full lg:mt-0 "></ImageWrapper>
+    </a>
+    <div class="px-1">
+        <div class="text-[0.72rem] font-semibold uppercase tracking-[0.3em] text-[var(--primary)]/80 text-center mb-2" data-lang-zh="主页信息" data-lang-en="Profile">Profile</div>
+        <div class="font-semibold text-[1.45rem] leading-tight text-center mb-2 text-[var(--deep-text)] transition">{config.name}</div>
+        <div class="text-center text-sm text-50 mb-4 transition">{config.bio}</div>
+        <div class="flex flex-wrap gap-2 justify-center mb-1">
+            {config.links.length > 1 && config.links.map(item =>
+                    <a rel="me" aria-label={item.name} href={item.url} target="_blank" class="btn-regular rounded-full h-10 w-10 active:scale-90">
+                        <Icon name={item.icon} class="text-[1.5rem]"></Icon>
+                    </a>
+            )}
+            {config.links.length == 1 && <a rel="me" aria-label={config.links[0].name} href={config.links[0].url} target="_blank"
+                                            class="btn-regular rounded-full h-10 gap-2 px-4 font-semibold active:scale-[0.98]">
+                <Icon name={config.links[0].icon} class="text-[1.5rem]"></Icon>
+                {config.links[0].name}
+            </a>}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,40 @@
+---
+import type { GetStaticPaths } from "astro";
+import { PAGE_SIZE } from "../constants/constants";
+import { getSortedPosts } from "../utils/content-utils";
+import { url } from "../utils/url-utils";
+
+export const getStaticPaths = (async () => {
+	const allBlogPosts = await getSortedPosts();
+	const totalPages = Math.ceil(allBlogPosts.length / PAGE_SIZE);
+
+	if (totalPages <= 1) {
+		return [];
+	}
+
+	return Array.from({ length: totalPages - 1 }, (_value, index) => {
+		const currentPage = index + 2;
+		return {
+			params: { page: String(currentPage) },
+			props: { currentPage },
+		};
+	});
+}) satisfies GetStaticPaths;
+const { currentPage } = Astro.props;
+const target = url(`/home/${currentPage}/`);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta http-equiv="refresh" content={`0;url=${target}`} />
+		<link rel="canonical" href={target} />
+		<title>Redirecting...</title>
+		<script is:inline define:vars={{ target }}>
+			window.location.replace(target);
+		</script>
+	</head>
+	<body></body>
+</html>

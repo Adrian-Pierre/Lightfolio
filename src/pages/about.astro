@@ -1,0 +1,1684 @@
+---
+import { getEntry, render } from "astro:content";
+import ImageWrapper from "@components/misc/ImageWrapper.astro";
+import Markdown from "@components/misc/Markdown.astro";
+import { Icon } from "astro-icon/components";
+import { profileConfig } from "../config";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+import {
+	getCategoryList,
+	getSortedPosts,
+	getTagList,
+} from "../utils/content-utils";
+import { formatDateToYYYYMMDD } from "../utils/date-utils";
+import { url } from "../utils/url-utils";
+
+const aboutPost = await getEntry("spec", "about");
+
+if (!aboutPost) {
+	throw new Error("About page content not found");
+}
+
+const { Content } = await render(aboutPost);
+const hasAboutBody =
+	typeof aboutPost.body === "string" && aboutPost.body.trim().length > 0;
+const [sortedPosts, tagList, categoryList] = await Promise.all([
+	getSortedPosts(),
+	getTagList(),
+	getCategoryList(),
+]);
+const latestPosts = sortedPosts.slice(0, 3);
+const activityDates = sortedPosts.map(
+	(post) => post.data.updated ?? post.data.published,
+);
+const latestActivityDate =
+	activityDates.length > 0
+		? activityDates.reduce((latest, current) =>
+				current > latest ? current : latest,
+			)
+		: undefined;
+const latestActivityLabel = latestActivityDate
+	? formatDateToYYYYMMDD(latestActivityDate)
+	: "--";
+const siteSnapshot = [
+	{
+		labelZh: "文章",
+		labelEn: "Posts",
+		value: String(sortedPosts.length),
+	},
+	{
+		labelZh: "标签",
+		labelEn: "Tags",
+		value: String(tagList.length),
+	},
+	{
+		labelZh: "分类",
+		labelEn: "Categories",
+		value: String(categoryList.length),
+	},
+	{
+		labelZh: "最近更新",
+		labelEn: "Last update",
+		value: latestActivityLabel,
+	},
+];
+
+const quickLinks = [
+	{
+		titleZh: "归档",
+		titleEn: "Archive",
+		href: url("/archive/"),
+		icon: "material-symbols:library-books-outline-rounded",
+	},
+	{
+		titleZh: "相册",
+		titleEn: "Gallery",
+		href: url("/pictures/"),
+		icon: "material-symbols:imagesmode-outline-rounded",
+	},
+	{
+		titleZh: "友链",
+		titleEn: "Friends",
+		href: url("/friends/"),
+		icon: "material-symbols:handshake-outline-rounded",
+	},
+];
+
+const DEFAULT_ABOUT_ACCENT = "170 230 219";
+const aboutDisplayName = profileConfig.name.replace(/\s+/g, " ").trim();
+const featuredProject = {
+	owner: "Adrian-Pierre",
+	repo: "Lightfolio",
+	href: "https://github.com/Adrian-Pierre/Lightfolio",
+	descriptionZh:
+		"一个基于 Astro 和 Fuwari 定制开发的开源博客主题，包含独立页面、扩展 Markdown 与响应式布局。",
+	descriptionEn:
+		"An open-source blog theme built with Astro and Fuwari, featuring custom pages, extended Markdown, and responsive layouts.",
+	meta: ["Astro", "Fuwari"],
+};
+---
+<MainGridLayout title="关于" description="关于" hideSidebar={true}>
+	<about-interactive class="about-page" style={`--about-active-rgb:${DEFAULT_ABOUT_ACCENT};`}>
+		<div
+			hidden
+			data-lang-document-title-zh={`关于 - ${profileConfig.name}`}
+			data-lang-document-title-en={`About - ${profileConfig.name}`}
+		></div>
+		<section class="about-hero card-base relative overflow-hidden px-6 py-6 md:px-8 md:py-8" data-tilt-surface>
+			<div class="about-orb is-pink"></div>
+			<div class="about-orb is-mint"></div>
+			<div class="about-orb is-blue"></div>
+
+				<div class="about-hero-grid relative z-10">
+					<div class="about-portrait-wrap">
+						<div class="about-portrait-glow"></div>
+						<div class="about-portrait-shell">
+						<ImageWrapper
+							src={profileConfig.avatar || ""}
+							alt={`${profileConfig.name} avatar`}
+							class="h-full w-full"
+							fit="cover"
+								overlay={false}
+							/>
+						</div>
+					</div>
+
+					<div class="about-copy">
+						<div class="about-copy-main">
+							<p class="about-kicker" data-lang-zh="关于" data-lang-en="About">About</p>
+							<h1 class="about-name">{aboutDisplayName}</h1>
+							<p class="about-bio">{profileConfig.bio || "A small corner for notes and feelings."}</p>
+							<p
+								class="about-lead"
+								data-lang-zh="这里可以介绍你自己、你的创作方向，以及这个博客所记录的内容。"
+								data-lang-en="Introduce yourself, your work, and the ideas collected on this blog."
+							>
+								Introduce yourself, your work, and the ideas collected on this blog.
+							</p>
+
+							{profileConfig.links.length > 0 && (
+								<div class="about-socials about-socials--intro">
+									{profileConfig.links.map((item) => (
+										<a
+											rel="me"
+											aria-label={item.name}
+											href={item.url}
+											target="_blank"
+											class="about-social-link"
+										>
+											<Icon name={item.icon} class="text-[1.15rem]" />
+											<span>{item.name}</span>
+										</a>
+									))}
+								</div>
+							)}
+						</div>
+
+						<aside class="about-copy-side">
+							<section class="about-hero-panel">
+								<section class="about-widget-card about-widget-card--hero about-orbit-card">
+									<div
+										class="about-orbit-stage"
+										data-about-orbit-stage
+										data-active="false"
+										aria-label="Interactive orbit field"
+									>
+										<div class="about-orbit-glow is-one"></div>
+										<div class="about-orbit-glow is-two"></div>
+										<canvas class="about-orbit-canvas" data-about-orbit-canvas></canvas>
+									</div>
+								</section>
+							</section>
+						</aside>
+					</div>
+				</div>
+			</section>
+
+		<div class="about-lower-grid">
+			<section class="card-base about-content-panel relative overflow-hidden px-6 py-6 md:px-7 md:py-7" data-tilt-surface>
+				<div class="about-panel-glow is-content"></div>
+				<div class="about-content-shell relative z-10">
+					<div class="about-section-head">
+						<span class="about-section-dot"></span>
+						<h2 data-lang-zh="这个小站" data-lang-en="This Corner">This Corner</h2>
+					</div>
+
+					<a
+						href={featuredProject.href}
+						target="_blank"
+						rel="noreferrer"
+						class="about-project-card"
+					>
+						<div class="about-project-titlebar">
+							<div class="about-project-titlegroup">
+								<div class="about-project-avatar">
+									<ImageWrapper
+										src={profileConfig.avatar || ""}
+										alt={`${featuredProject.owner} avatar`}
+										class="h-full w-full"
+										fit="cover"
+										overlay={false}
+									/>
+								</div>
+								<div class="about-project-heading">
+									<p>{featuredProject.owner}</p>
+									<h3>{featuredProject.repo}</h3>
+								</div>
+							</div>
+
+							<div class="about-project-github">
+								<Icon name="fa6-brands:github" class="text-[1.7rem]" />
+							</div>
+						</div>
+
+						<p
+							class="about-project-description"
+							data-lang-zh={featuredProject.descriptionZh}
+							data-lang-en={featuredProject.descriptionEn}
+						>
+							{featuredProject.descriptionEn}
+						</p>
+
+						<div class="about-project-meta">
+							{featuredProject.meta.map((item) => (
+								<span class="about-project-pill">{item}</span>
+							))}
+						</div>
+					</a>
+
+					<div class="about-content-bottom">
+						<div class="about-content-snapshot">
+							<div class="about-side-subhead">
+								<p data-lang-zh="站点概览" data-lang-en="Site Snapshot">Site Snapshot</p>
+							</div>
+
+							<p
+								class="about-side-intro"
+								data-lang-zh="先把这个小站的体量和更新节奏放在左边，读完这里再继续往下看会更顺手。"
+								data-lang-en="A quick snapshot of this site lives here first, so the rest of the page feels easier to scan."
+							>
+								A quick snapshot of this site lives here first, so the rest of the page feels easier to scan.
+							</p>
+
+							<div class="about-insight-grid">
+								{siteSnapshot.map((item) => (
+									<article class="about-insight-card">
+										<span class="about-insight-label" data-lang-zh={item.labelZh} data-lang-en={item.labelEn}>
+											{item.labelEn}
+										</span>
+										<strong class="about-insight-value">{item.value}</strong>
+									</article>
+								))}
+							</div>
+						</div>
+
+						{hasAboutBody && (
+							<Markdown class="about-markdown about-markdown-compact mt-5">
+								<Content />
+							</Markdown>
+						)}
+					</div>
+				</div>
+			</section>
+
+			<aside class="about-side-grid">
+				<section class="card-base about-side-card relative overflow-hidden px-6 py-6 md:px-7 md:py-7" data-tilt-surface>
+					<div class="about-panel-glow is-links"></div>
+					<div class="about-side-shell relative z-10">
+						<div class="about-section-head">
+							<span class="about-section-dot"></span>
+							<h2 data-lang-zh="继续逛逛" data-lang-en="Explore">Explore</h2>
+						</div>
+
+						<p
+							class="about-side-intro"
+							data-lang-zh="右边留给最近更新和常用入口，想继续逛的时候会更直接。"
+							data-lang-en="Recent updates and quick routes stay on the right, so continuing to browse feels direct."
+						>
+							Recent updates and quick routes stay on the right, so continuing to browse feels direct.
+						</p>
+
+						<div class="about-side-block">
+							<div class="about-side-subhead">
+								<p data-lang-zh="最新文章" data-lang-en="Latest Posts">Latest Posts</p>
+								<span class="about-side-note">{latestPosts.length}</span>
+							</div>
+
+							{latestPosts.length > 0 ? (
+								<div class="about-recent-list">
+									{latestPosts.map((post, index) => (
+										<a href={url(`/posts/${post.slug}/`)} class="about-recent-item">
+											<span class="about-recent-index">{String(index + 1).padStart(2, "0")}</span>
+											<div class="about-recent-copy">
+												<h3>{post.data.title}</h3>
+												<p>{formatDateToYYYYMMDD(post.data.published)}</p>
+											</div>
+											<Icon name="material-symbols:arrow-outward-rounded" class="about-recent-arrow" />
+										</a>
+									))}
+								</div>
+							) : (
+								<p
+									class="about-recent-empty"
+									data-lang-zh="这里还没有文章，之后再来看看。"
+									data-lang-en="No posts here yet. Check back again soon."
+								>
+									No posts here yet. Check back again soon.
+								</p>
+							)}
+						</div>
+
+						<div class="about-side-block">
+							<div class="about-side-subhead">
+								<p data-lang-zh="常用入口" data-lang-en="Shortcuts">Shortcuts</p>
+							</div>
+
+							<div class="about-shortcut-row">
+								{quickLinks.map((item) => (
+									<a href={item.href} class="about-shortcut-chip">
+										<Icon name={item.icon} class="text-[1.05rem]" />
+										<span data-lang-zh={item.titleZh} data-lang-en={item.titleEn}>{item.titleEn}</span>
+									</a>
+								))}
+							</div>
+						</div>
+
+					</div>
+				</section>
+			</aside>
+		</div>
+	</about-interactive>
+</MainGridLayout>
+
+<style>
+	about-interactive {
+		display: block;
+	}
+
+	.about-page {
+		display: grid;
+		gap: 1.6rem;
+	}
+
+	about-interactive[data-motion="off"] .about-hero,
+	about-interactive[data-motion="off"] .about-content-panel,
+	about-interactive[data-motion="off"] .about-side-card {
+		transform: none !important;
+	}
+
+	about-interactive[data-motion="off"] .about-hero::after,
+	about-interactive[data-motion="off"] .about-content-panel::after,
+	about-interactive[data-motion="off"] .about-side-card::after {
+		opacity: 0 !important;
+	}
+
+	.about-hero,
+	.about-content-panel,
+	.about-side-card {
+		position: relative;
+		isolation: isolate;
+		transform:
+			perspective(1600px)
+			rotateX(var(--about-tilt-x, 0deg))
+			rotateY(var(--about-tilt-y, 0deg));
+		transform-style: preserve-3d;
+		will-change: transform;
+		transition:
+			transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+			box-shadow 260ms ease;
+	}
+
+	.about-hero::after,
+	.about-content-panel::after,
+	.about-side-card::after {
+		content: "";
+		position: absolute;
+		inset: -35%;
+		background:
+			radial-gradient(
+				circle at var(--about-pointer-x, 50%) var(--about-pointer-y, 50%),
+				rgba(var(--about-active-rgb, 170 230 219), 0.18),
+				rgba(255, 255, 255, 0) 24rem
+			);
+		opacity: var(--about-surface-glow, 0);
+		pointer-events: none;
+		transition: opacity 220ms ease;
+		z-index: 0;
+	}
+
+	.about-hero[data-hovered="true"],
+	.about-content-panel[data-hovered="true"],
+	.about-side-card[data-hovered="true"] {
+		--about-surface-glow: 1;
+		box-shadow: 0 34px 78px -48px rgba(24, 51, 56, 0.28);
+	}
+
+	.about-hero {
+		background:
+			radial-gradient(circle at 78% 18%, rgba(var(--about-active-rgb, 170 230 219), 0.28), transparent 16rem),
+			linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(251, 245, 255, 0.82) 34%, rgba(241, 252, 248, 0.82) 68%, rgba(239, 247, 255, 0.88)),
+			rgba(255, 255, 255, 0.72);
+		box-shadow: 0 36px 76px -50px rgba(24, 51, 56, 0.28);
+	}
+
+	.about-hero-grid {
+		display: grid;
+		gap: 2rem;
+		align-items: start;
+		grid-template-columns: minmax(0, 15.75rem) minmax(0, 1fr);
+	}
+
+	.about-orb {
+		position: absolute;
+		border-radius: 999px;
+		filter: blur(10px);
+		opacity: 0.8;
+		pointer-events: none;
+	}
+
+	.about-orb.is-pink {
+		top: -2.5rem;
+		left: -1rem;
+		width: 12rem;
+		height: 12rem;
+		background: radial-gradient(circle, rgba(255, 207, 223, 0.75), rgba(255, 207, 223, 0));
+	}
+
+	.about-orb.is-mint {
+		right: 10%;
+		top: 2rem;
+		width: 10rem;
+		height: 10rem;
+		background: radial-gradient(circle, rgba(179, 237, 226, 0.68), rgba(179, 237, 226, 0));
+	}
+
+	.about-orb.is-blue {
+		right: -1.5rem;
+		bottom: -2rem;
+		width: 12rem;
+		height: 12rem;
+		background: radial-gradient(circle, rgba(198, 227, 255, 0.75), rgba(198, 227, 255, 0));
+	}
+
+	.about-portrait-wrap {
+		position: relative;
+		padding-top: 0.35rem;
+		padding-bottom: 0.8rem;
+	}
+
+	.about-portrait-glow {
+		position: absolute;
+		inset: 1.2rem;
+		border-radius: 2rem;
+		background: linear-gradient(145deg, rgba(255, 214, 228, 0.58), rgba(183, 230, 221, 0.42));
+		filter: blur(16px);
+		opacity: 0.9;
+	}
+
+	.about-portrait-shell {
+		position: relative;
+		overflow: hidden;
+		aspect-ratio: 1 / 1.12;
+		border-radius: 1.85rem;
+		padding: 0.68rem;
+		border: 1px solid rgba(255, 255, 255, 0.92);
+		background:
+			linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.28)),
+			linear-gradient(135deg, rgba(255, 211, 223, 0.4), rgba(194, 230, 255, 0.32));
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.9),
+			0 28px 56px -42px rgba(24, 51, 56, 0.34);
+		backdrop-filter: blur(18px);
+		-webkit-backdrop-filter: blur(18px);
+	}
+
+	.about-portrait-shell :global(img) {
+		border-radius: 1.3rem;
+	}
+
+	.about-copy {
+		position: relative;
+		z-index: 1;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(16.5rem, 18.8rem);
+		gap: 1.35rem;
+		align-items: start;
+	}
+
+	.about-copy-main {
+		min-width: 0;
+		padding-top: 0.25rem;
+	}
+
+	.about-copy-side {
+		min-width: 0;
+	}
+
+	.about-hero-panel {
+		display: grid;
+		gap: 0;
+		padding: 0;
+		border: none;
+		border-radius: 0;
+		background: transparent;
+		box-shadow: none;
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+	}
+
+	.about-chip-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.55rem;
+	}
+
+	.about-chip-row.is-panel {
+		margin-top: 0.1rem;
+	}
+
+	.about-chip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.42rem 0.8rem;
+		border-radius: 999px;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		border: 1px solid rgba(255, 255, 255, 0.72);
+		box-shadow: 0 14px 28px -22px rgba(24, 51, 56, 0.16);
+	}
+
+	.about-chip.is-mint {
+		background: rgba(221, 247, 240, 0.88);
+		color: #4e857e;
+	}
+
+	.about-chip.is-peach {
+		background: rgba(255, 233, 223, 0.9);
+		color: #a86f5e;
+	}
+
+	.about-chip.is-blue {
+		background: rgba(225, 239, 255, 0.9);
+		color: #5c7d9b;
+	}
+
+	.about-kicker {
+		margin: 0;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.24em;
+		text-transform: uppercase;
+		color: rgba(82, 103, 114, 0.82);
+	}
+
+	.about-name {
+		margin: 0.75rem 0 0;
+		font-size: clamp(2.8rem, 4.8vw, 4.15rem);
+		line-height: 0.96;
+		font-weight: 900;
+		letter-spacing: 0.03em;
+		color: rgb(73 85 93);
+		text-wrap: balance;
+		text-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.84),
+			0 12px 24px rgba(177, 197, 223, 0.08);
+		-webkit-text-stroke: 0.01em rgba(73, 85, 93, 0.02);
+	}
+
+	.about-bio {
+		display: inline-flex;
+		align-items: center;
+		margin: 1rem 0 0;
+		padding: 0.36rem 0.7rem;
+		border-radius: 999px;
+		border: 1px solid rgba(255, 255, 255, 0.78);
+		background: rgba(255, 255, 255, 0.52);
+		font-size: 0.78rem;
+		line-height: 1;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: rgba(73, 93, 100, 0.78);
+		box-shadow: 0 14px 28px -24px rgba(24, 51, 56, 0.18);
+	}
+
+	.about-lead {
+		margin: 1.15rem 0 0;
+		max-width: 34rem;
+		font-size: 1rem;
+		line-height: 1.9;
+		color: rgba(51, 79, 82, 0.68);
+	}
+
+	.about-socials {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-top: 0;
+	}
+
+	.about-socials--intro {
+		margin-top: 1.2rem;
+	}
+
+	.about-socials.is-panel {
+		display: grid;
+		gap: 0.65rem;
+		margin-top: 0.45rem;
+		margin-bottom: 0.3rem;
+	}
+
+	.about-social-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.75rem 1rem;
+		border-radius: 1rem;
+		border: 1px solid rgba(255, 255, 255, 0.84);
+		background: rgba(255, 255, 255, 0.68);
+		color: var(--deep-text);
+		font-size: 0.95rem;
+		font-weight: 600;
+		box-shadow: 0 18px 40px -32px rgba(24, 51, 56, 0.24);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		transition:
+			transform 0.22s ease,
+			background-color 0.22s ease,
+			border-color 0.22s ease,
+			box-shadow 0.22s ease;
+	}
+
+	.about-socials.is-panel .about-social-link {
+		width: 100%;
+		justify-content: center;
+		padding: 0.72rem 0.95rem;
+		border-radius: 1rem;
+	}
+
+	.about-social-link:hover {
+		transform: translateY(-2px);
+		background: rgba(255, 255, 255, 0.88);
+		box-shadow: 0 24px 48px -34px rgba(24, 51, 56, 0.28);
+	}
+
+	.about-widget-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.9rem;
+		margin-top: 1.5rem;
+	}
+
+	.about-widget-grid.is-compact {
+		grid-template-columns: minmax(0, 1fr);
+		max-width: 17rem;
+	}
+
+	.about-widget-card {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		min-height: 9rem;
+		padding: 1rem 1.05rem;
+		border-radius: 1.25rem;
+		border: 1px solid rgba(255, 255, 255, 0.84);
+		background:
+			linear-gradient(145deg, rgba(var(--about-active-rgb, 170 230 219), 0.16), rgba(255, 255, 255, 0.26) 52%, rgba(255, 255, 255, 0) 100%),
+			linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42)),
+			rgba(255, 255, 255, 0.5);
+		box-shadow: 0 24px 48px -38px rgba(24, 51, 56, 0.24);
+	}
+
+	.about-widget-card--hero {
+		min-height: auto;
+		padding: 0.72rem;
+		border-radius: 1.2rem;
+		border: 1px solid rgba(var(--about-active-rgb, 170 230 219), 0.22);
+		background:
+			linear-gradient(145deg, rgba(var(--about-active-rgb, 170 230 219), 0.12), rgba(255, 255, 255, 0.18) 52%, rgba(255, 255, 255, 0) 100%),
+			linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.4)),
+			rgba(255, 255, 255, 0.46);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.9),
+			0 22px 42px -32px rgba(24, 51, 56, 0.24),
+			0 0 0 1px rgba(var(--about-active-rgb, 170 230 219), 0.08);
+	}
+
+	.about-widget-card--hero.about-orbit-card {
+		padding: 0;
+		border: none;
+		border-radius: 0;
+		background: transparent;
+		box-shadow: none;
+	}
+
+	.about-widget-label {
+		margin: 0;
+		font-size: 0.74rem;
+		font-weight: 700;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: rgba(51, 79, 82, 0.45);
+	}
+
+	.about-widget-note {
+		margin: 0.55rem 0 0;
+		font-size: 0.84rem;
+		line-height: 1.5;
+		color: rgba(51, 79, 82, 0.6);
+	}
+
+	.about-orbit-card {
+		padding: 0;
+		border: none;
+		border-radius: 0;
+		background: transparent;
+		box-shadow: none;
+		overflow: visible;
+	}
+
+	.about-orbit-stage {
+		position: relative;
+		overflow: hidden;
+		min-height: clamp(17.4rem, 36vw, 20.2rem);
+		border-radius: 0;
+		border: none;
+		background: transparent;
+		box-shadow: none;
+		isolation: isolate;
+		outline: none;
+		-webkit-tap-highlight-color: transparent;
+		transition:
+			opacity 0.28s ease,
+			filter 0.28s ease;
+	}
+
+	.about-orbit-stage::before {
+		content: none;
+	}
+
+	.about-orbit-stage::after {
+		content: none;
+	}
+
+	.about-orbit-stage[data-active="true"] {
+		opacity: 1;
+		filter: saturate(1.05);
+	}
+
+	.about-orbit-canvas {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+		z-index: 2;
+		outline: none;
+	}
+
+	.about-orbit-glow {
+		position: absolute;
+		border-radius: 999px;
+		filter: blur(28px);
+		opacity: 0.82;
+		pointer-events: none;
+		z-index: 1;
+	}
+
+	.about-orbit-glow.is-one {
+		top: -2.2rem;
+		right: -1.8rem;
+		width: 9.6rem;
+		height: 9.6rem;
+		background: radial-gradient(circle, rgba(var(--about-active-rgb, 170 230 219), 0.34), rgba(255, 255, 255, 0));
+	}
+
+	.about-orbit-glow.is-two {
+		left: -1.8rem;
+		bottom: -2.3rem;
+		width: 8.4rem;
+		height: 8.4rem;
+		background: radial-gradient(circle, rgba(255, 214, 228, 0.38), rgba(255, 255, 255, 0));
+	}
+
+	.about-lower-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1.35fr) minmax(19.5rem, 1fr);
+		gap: 1.6rem;
+		align-items: stretch;
+	}
+
+	.about-side-grid {
+		display: grid;
+		gap: 1.6rem;
+		align-content: stretch;
+		grid-template-rows: minmax(0, 1fr);
+		height: 100%;
+	}
+
+	.about-content-panel,
+	.about-side-card {
+		height: 100%;
+		box-shadow: 0 30px 68px -48px rgba(24, 51, 56, 0.22);
+	}
+
+	.about-content-panel,
+	.about-side-card {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.about-content-shell,
+	.about-side-shell {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+	}
+
+	.about-content-bottom {
+		margin-top: auto;
+	}
+
+	.about-panel-glow {
+		position: absolute;
+		inset: auto;
+		width: 12rem;
+		height: 12rem;
+		border-radius: 999px;
+		filter: blur(14px);
+		opacity: 0.88;
+		pointer-events: none;
+	}
+
+	.about-panel-glow.is-content {
+		top: -3.5rem;
+		right: -3rem;
+		background: radial-gradient(circle, rgba(213, 231, 255, 0.6), rgba(213, 231, 255, 0));
+	}
+
+	.about-panel-glow.is-links {
+		top: -4rem;
+		right: -2rem;
+		background: radial-gradient(circle, rgba(255, 214, 228, 0.66), rgba(255, 214, 228, 0));
+	}
+
+	.about-section-head {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.about-section-head h2 {
+		margin: 0;
+		font-size: 1.15rem;
+		font-weight: 700;
+		color: var(--deep-text);
+	}
+
+	.about-section-dot {
+		width: 0.7rem;
+		height: 0.7rem;
+		border-radius: 999px;
+		background:
+			linear-gradient(
+				135deg,
+				rgba(255, 210, 221, 0.96),
+				rgba(var(--about-active-rgb, 170 230 219), 0.96)
+			);
+		box-shadow: 0 0 0 0.35rem rgba(var(--about-active-rgb, 170 230 219), 0.12);
+	}
+
+	.about-markdown {
+		position: relative;
+	}
+
+	.about-project-card {
+		display: block;
+		margin-top: 1.3rem;
+		padding: 1.35rem 1.4rem;
+		border-radius: 1.6rem;
+		border: 1px solid rgba(255, 255, 255, 0.86);
+		background:
+			linear-gradient(140deg, rgba(var(--about-active-rgb, 170 230 219), 0.18), rgba(255, 255, 255, 0.02) 48%),
+			linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(246, 250, 255, 0.62)),
+			rgba(255, 255, 255, 0.7);
+		box-shadow: 0 24px 56px -40px rgba(24, 51, 56, 0.2);
+		transition:
+			transform 0.22s ease,
+			box-shadow 0.22s ease,
+			border-color 0.22s ease;
+	}
+
+	.about-project-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 28px 62px -40px rgba(24, 51, 56, 0.24);
+		border-color: rgba(var(--about-active-rgb, 170 230 219), 0.34);
+	}
+
+	.about-project-titlebar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+
+	.about-project-titlegroup {
+		display: flex;
+		align-items: center;
+		gap: 0.95rem;
+		min-width: 0;
+	}
+
+	.about-project-avatar {
+		flex: none;
+		width: 3.15rem;
+		height: 3.15rem;
+		overflow: hidden;
+		border-radius: 999px;
+		border: 1px solid rgba(255, 255, 255, 0.88);
+		background: rgba(255, 255, 255, 0.9);
+		box-shadow: 0 14px 28px -22px rgba(24, 51, 56, 0.2);
+	}
+
+	.about-project-avatar :global(img) {
+		border-radius: 999px;
+	}
+
+	.about-project-heading {
+		min-width: 0;
+	}
+
+	.about-project-heading p {
+		margin: 0;
+		font-size: 0.95rem;
+		font-weight: 500;
+		color: rgba(51, 79, 82, 0.72);
+	}
+
+	.about-project-heading h3 {
+		margin: 0.15rem 0 0;
+		font-size: clamp(1.45rem, 3vw, 2.05rem);
+		line-height: 1.08;
+		font-weight: 800;
+		letter-spacing: -0.03em;
+		color: var(--deep-text);
+		word-break: break-word;
+	}
+
+	.about-project-github {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 3.4rem;
+		height: 3.4rem;
+		flex: none;
+		border-radius: 1.2rem;
+		background: rgba(255, 255, 255, 0.74);
+		box-shadow: 0 16px 34px -26px rgba(24, 51, 56, 0.2);
+		color: var(--deep-text);
+	}
+
+	.about-project-description {
+		margin: 1rem 0 0;
+		font-size: 0.95rem;
+		line-height: 1.8;
+		color: rgba(51, 79, 82, 0.66);
+	}
+
+	.about-project-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.65rem;
+		margin-top: 1rem;
+	}
+
+	.about-project-pill {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.42rem 0.78rem;
+		border-radius: 999px;
+		background: rgba(var(--about-active-rgb, 170 230 219), 0.2);
+		color: rgba(51, 79, 82, 0.82);
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.03em;
+	}
+
+	.about-markdown :global(h1:first-child) {
+		display: none;
+	}
+
+	.about-markdown :global(.github-card) {
+		margin-top: 0.2rem;
+	}
+
+	.about-markdown-compact {
+		margin-top: 1rem;
+	}
+
+	.about-markdown-compact :global(p) {
+		margin: 0;
+		font-size: 0.95rem;
+		line-height: 1.85;
+		color: rgba(51, 79, 82, 0.64);
+	}
+
+	.about-content-snapshot {
+		margin-top: 1.3rem;
+	}
+
+	.about-content-snapshot .about-side-intro {
+		margin-top: 0.55rem;
+	}
+
+	.about-content-snapshot .about-insight-grid {
+		margin-top: 0.95rem;
+	}
+
+	.about-side-intro {
+		margin: 1rem 0 0;
+		font-size: 0.92rem;
+		line-height: 1.75;
+		color: rgba(51, 79, 82, 0.64);
+	}
+
+	.about-insight-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.75rem;
+		margin-top: 1.2rem;
+	}
+
+	.about-insight-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.95rem 1rem;
+		border-radius: 1.2rem;
+		border: 1px solid rgba(255, 255, 255, 0.84);
+		background:
+			linear-gradient(145deg, rgba(var(--about-active-rgb, 170 230 219), 0.14), rgba(255, 255, 255, 0.02) 55%),
+			linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(246, 250, 255, 0.66)),
+			rgba(255, 255, 255, 0.7);
+		box-shadow: 0 18px 40px -34px rgba(24, 51, 56, 0.18);
+	}
+
+	.about-insight-card.is-wide {
+		grid-column: 1 / -1;
+	}
+
+	.about-insight-label {
+		font-size: 0.74rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgba(51, 79, 82, 0.5);
+	}
+
+	.about-insight-value {
+		font-size: 1.45rem;
+		line-height: 1.1;
+		font-weight: 800;
+		letter-spacing: -0.03em;
+		color: var(--deep-text);
+		word-break: break-word;
+	}
+
+	.about-side-block {
+		margin-top: 1.3rem;
+	}
+
+	.about-side-shell > .about-side-block:last-child {
+		margin-top: auto;
+		padding-top: 1.35rem;
+	}
+
+	.about-side-subhead {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: 0.85rem;
+	}
+
+	.about-side-subhead p {
+		margin: 0;
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgba(51, 79, 82, 0.52);
+	}
+
+	.about-side-note {
+		font-size: 0.8rem;
+		font-weight: 700;
+		color: rgba(51, 79, 82, 0.54);
+	}
+
+	.about-recent-list {
+		display: grid;
+		gap: 0.75rem;
+	}
+
+	.about-recent-item {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		gap: 0.85rem;
+		align-items: center;
+		padding: 0.9rem 0.95rem;
+		border-radius: 1.2rem;
+		border: 1px solid rgba(255, 255, 255, 0.84);
+		background:
+			linear-gradient(145deg, rgba(255, 232, 239, 0.24), rgba(255, 255, 255, 0.76)),
+			rgba(255, 255, 255, 0.68);
+		box-shadow: 0 18px 40px -34px rgba(24, 51, 56, 0.18);
+		transition:
+			transform 0.22s ease,
+			box-shadow 0.22s ease,
+			border-color 0.22s ease;
+	}
+
+	.about-recent-item:hover {
+		transform: translateY(-2px);
+		border-color: rgba(var(--about-active-rgb, 170 230 219), 0.26);
+		box-shadow: 0 22px 44px -34px rgba(24, 51, 56, 0.24);
+	}
+
+	.about-recent-index {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.3rem;
+		height: 2.3rem;
+		border-radius: 0.9rem;
+		background: rgba(var(--about-active-rgb, 170 230 219), 0.18);
+		color: var(--deep-text);
+		font-size: 0.8rem;
+		font-weight: 800;
+	}
+
+	.about-recent-copy {
+		min-width: 0;
+	}
+
+	.about-recent-copy h3 {
+		margin: 0;
+		font-size: 0.95rem;
+		font-weight: 700;
+		line-height: 1.45;
+		color: var(--deep-text);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+	}
+
+	.about-recent-copy p {
+		margin: 0.25rem 0 0;
+		font-size: 0.82rem;
+		color: rgba(51, 79, 82, 0.58);
+	}
+
+	.about-recent-arrow {
+		font-size: 1.2rem;
+		color: rgba(51, 79, 82, 0.48);
+	}
+
+	.about-recent-empty {
+		margin: 0;
+		padding: 0.95rem 1rem;
+		border-radius: 1.1rem;
+		border: 1px solid rgba(255, 255, 255, 0.82);
+		background: rgba(255, 255, 255, 0.58);
+		font-size: 0.9rem;
+		line-height: 1.7;
+		color: rgba(51, 79, 82, 0.6);
+	}
+
+	.about-shortcut-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.7rem;
+	}
+
+	.about-shortcut-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.72rem 0.9rem;
+		border-radius: 999px;
+		border: 1px solid rgba(255, 255, 255, 0.84);
+		background:
+			linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(247, 250, 255, 0.7)),
+			rgba(255, 255, 255, 0.7);
+		color: var(--deep-text);
+		font-size: 0.88rem;
+		font-weight: 700;
+		box-shadow: 0 16px 34px -28px rgba(24, 51, 56, 0.16);
+		transition:
+			transform 0.22s ease,
+			box-shadow 0.22s ease,
+			border-color 0.22s ease;
+	}
+
+	.about-shortcut-chip:hover {
+		transform: translateY(-1px);
+		border-color: rgba(var(--about-active-rgb, 170 230 219), 0.28);
+		box-shadow: 0 18px 36px -26px rgba(24, 51, 56, 0.2);
+	}
+
+	@media (max-width: 1100px) {
+		.about-hero-grid,
+		.about-lower-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.about-portrait-wrap {
+			max-width: 19rem;
+			margin: 0 auto;
+		}
+
+		.about-copy {
+			grid-template-columns: 1fr;
+			gap: 1.1rem;
+		}
+
+		.about-copy-side {
+			max-width: 20rem;
+		}
+	}
+
+	@media (max-width: 720px) {
+		.about-side-grid {
+			display: none;
+		}
+
+		.about-hero {
+			padding: 1.35rem;
+		}
+
+		.about-portrait-wrap {
+			padding-bottom: 1rem;
+		}
+
+		.about-widget-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.about-name {
+			font-size: 2.75rem;
+		}
+
+		.about-copy-side {
+			max-width: none;
+		}
+
+		.about-hero-panel {
+			padding: 0;
+		}
+
+		.about-orbit-stage {
+			min-height: 14.6rem;
+		}
+
+		.about-chip-row.is-panel {
+			justify-content: center;
+		}
+
+		.about-socials {
+			gap: 0.7rem;
+		}
+
+		.about-social-link {
+			width: 100%;
+			justify-content: center;
+		}
+
+		.about-project-titlebar {
+			align-items: flex-start;
+		}
+
+		.about-project-github {
+			width: 3rem;
+			height: 3rem;
+			border-radius: 1rem;
+		}
+
+		.about-insight-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.about-hero,
+		.about-content-panel,
+		.about-side-card,
+		.about-recent-item,
+		.about-shortcut-chip,
+		.about-social-link {
+			transition: none !important;
+			transform: none !important;
+		}
+	}
+</style>
+
+<script>
+	class AboutInteractive extends HTMLElement {
+		private cleanupFns: Array<() => void> = [];
+
+		connectedCallback() {
+			this.dataset.motion = "on";
+			this.setupOrbitField();
+
+			if (!window.matchMedia("(pointer: fine)").matches) {
+				return;
+			}
+
+			this.setupTiltSurfaces();
+		}
+
+		disconnectedCallback() {
+			this.cleanupFns.forEach((cleanup) => cleanup());
+			this.cleanupFns = [];
+		}
+
+		private setupTiltSurfaces() {
+			const surfaces = Array.from(this.querySelectorAll<HTMLElement>("[data-tilt-surface]"));
+
+			for (const surface of surfaces) {
+				const onMove = (event: PointerEvent) => {
+					if (this.dataset.motion === "off") return;
+
+					const rect = surface.getBoundingClientRect();
+					const x = ((event.clientX - rect.left) / rect.width) * 100;
+					const y = ((event.clientY - rect.top) / rect.height) * 100;
+					const rotateY = ((x - 50) / 50) * 2.4;
+					const rotateX = ((50 - y) / 50) * 2.1;
+
+					surface.style.setProperty("--about-pointer-x", `${x}%`);
+					surface.style.setProperty("--about-pointer-y", `${y}%`);
+					surface.style.setProperty("--about-tilt-x", `${rotateX}deg`);
+					surface.style.setProperty("--about-tilt-y", `${rotateY}deg`);
+					surface.dataset.hovered = "true";
+				};
+
+				const reset = () => {
+					surface.style.setProperty("--about-tilt-x", "0deg");
+					surface.style.setProperty("--about-tilt-y", "0deg");
+					surface.dataset.hovered = "false";
+				};
+
+				surface.addEventListener("pointermove", onMove);
+				surface.addEventListener("pointerleave", reset);
+
+				this.cleanupFns.push(() => {
+					surface.removeEventListener("pointermove", onMove);
+					surface.removeEventListener("pointerleave", reset);
+				});
+			}
+		}
+
+		private setupOrbitField() {
+			const stage = this.querySelector<HTMLElement>("[data-about-orbit-stage]");
+			const canvas = this.querySelector<HTMLCanvasElement>("[data-about-orbit-canvas]");
+			if (!stage || !canvas) return;
+
+			const context = canvas.getContext("2d");
+			if (!context) return;
+
+			type OrbitNodeSeed = {
+				x: number;
+				y: number;
+				driftX: number;
+				driftY: number;
+				speed: number;
+				phase: number;
+				size: number;
+				tone: "accent" | "rose" | "sky";
+			};
+
+			const seeds: OrbitNodeSeed[] = [
+				{ x: 0.18, y: 0.22, driftX: 0.028, driftY: 0.038, speed: 0.0007, phase: 0.3, size: 3.6, tone: "rose" },
+				{ x: 0.34, y: 0.3, driftX: 0.025, driftY: 0.03, speed: 0.00092, phase: 1.2, size: 4.2, tone: "accent" },
+				{ x: 0.58, y: 0.18, driftX: 0.032, driftY: 0.028, speed: 0.00078, phase: 2.1, size: 3.5, tone: "sky" },
+				{ x: 0.78, y: 0.26, driftX: 0.026, driftY: 0.034, speed: 0.00082, phase: 3.1, size: 4.1, tone: "accent" },
+				{ x: 0.22, y: 0.58, driftX: 0.024, driftY: 0.03, speed: 0.00088, phase: 4.2, size: 3.4, tone: "sky" },
+				{ x: 0.46, y: 0.52, driftX: 0.03, driftY: 0.026, speed: 0.00095, phase: 5, size: 5.2, tone: "accent" },
+				{ x: 0.7, y: 0.56, driftX: 0.024, driftY: 0.036, speed: 0.00074, phase: 5.8, size: 3.9, tone: "rose" },
+				{ x: 0.84, y: 0.68, driftX: 0.02, driftY: 0.024, speed: 0.00068, phase: 0.8, size: 3.2, tone: "sky" },
+				{ x: 0.4, y: 0.8, driftX: 0.03, driftY: 0.02, speed: 0.00072, phase: 2.8, size: 3.7, tone: "rose" },
+				{ x: 0.62, y: 0.78, driftX: 0.022, driftY: 0.028, speed: 0.00084, phase: 1.7, size: 4.4, tone: "accent" },
+			];
+
+			let width = 0;
+			let height = 0;
+			let dpr = 1;
+			let animationFrame = 0;
+			let accent = this.readAccentRgb();
+			let frameCount = 0;
+
+			const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+			const pointer = {
+				x: 0,
+				y: 0,
+				targetX: 0,
+				targetY: 0,
+				influence: 0,
+				targetInfluence: 0,
+			};
+			const pulses: Array<{ x: number; y: number; startedAt: number }> = [];
+
+			const resize = () => {
+				const rect = stage.getBoundingClientRect();
+				width = Math.max(rect.width, 1);
+				height = Math.max(rect.height, 1);
+				dpr = Math.min(window.devicePixelRatio || 1, 2);
+				canvas.width = Math.round(width * dpr);
+				canvas.height = Math.round(height * dpr);
+				canvas.style.width = `${width}px`;
+				canvas.style.height = `${height}px`;
+
+				if (pointer.targetX === 0 && pointer.targetY === 0) {
+					pointer.x = width * 0.52;
+					pointer.y = height * 0.52;
+					pointer.targetX = pointer.x;
+					pointer.targetY = pointer.y;
+				}
+			};
+
+			const updatePointer = (event: PointerEvent) => {
+				const rect = stage.getBoundingClientRect();
+				pointer.targetX = event.clientX - rect.left;
+				pointer.targetY = event.clientY - rect.top;
+				pointer.targetInfluence = 1;
+				stage.dataset.active = "true";
+			};
+
+			const releasePointer = () => {
+				pointer.targetInfluence = 0;
+				stage.dataset.active = "false";
+			};
+
+			const pushPulse = (x: number, y: number, startedAt = performance.now()) => {
+				pulses.push({ x, y, startedAt });
+				if (pulses.length > 4) {
+					pulses.shift();
+				}
+			};
+
+			const addPulse = (event: PointerEvent) => {
+				updatePointer(event);
+				pushPulse(pointer.targetX, pointer.targetY);
+			};
+
+			const handlePointerEnter = (event: PointerEvent) => {
+				updatePointer(event);
+				if (event.pointerType === "mouse") {
+					pushPulse(pointer.targetX, pointer.targetY, performance.now() - 140);
+				}
+			};
+
+			const handlePointerEnd = (event: PointerEvent) => {
+				if (event.pointerType !== "mouse") {
+					releasePointer();
+				}
+			};
+
+			const toneColor = (tone: OrbitNodeSeed["tone"], alpha: number) => {
+				if (tone === "accent") return this.colorFromRgb(accent, alpha);
+				if (tone === "rose") return `rgba(255, 214, 228, ${alpha})`;
+				return `rgba(194, 225, 255, ${alpha})`;
+			};
+
+			const drawOrbitRing = (
+				now: number,
+				centerX: number,
+				centerY: number,
+				radiusX: number,
+				radiusY: number,
+				rotation: number,
+				lineAlpha: number,
+				lineWidth: number,
+				dashOffset: number,
+			) => {
+				context.save();
+				context.translate(centerX, centerY);
+				context.rotate(rotation);
+				context.beginPath();
+				context.setLineDash([7, 11]);
+				context.lineDashOffset = dashOffset - now * 0.012;
+				context.ellipse(0, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
+				context.lineWidth = lineWidth;
+				context.strokeStyle = this.colorFromRgb(accent, lineAlpha);
+				context.stroke();
+				context.restore();
+				context.setLineDash([]);
+			};
+
+			const render = (now: number) => {
+				animationFrame = window.requestAnimationFrame(render);
+				if (!width || !height) return;
+
+				frameCount += 1;
+				if (frameCount % 18 === 0) {
+					accent = this.readAccentRgb();
+				}
+
+				const motionEnabled = this.dataset.motion !== "off" && !reducedMotionQuery.matches;
+				const easing = motionEnabled ? 0.18 : 0.1;
+				pointer.x += (pointer.targetX - pointer.x) * easing;
+				pointer.y += (pointer.targetY - pointer.y) * easing;
+				pointer.influence += (pointer.targetInfluence - pointer.influence) * (motionEnabled ? 0.14 : 0.18);
+
+				context.setTransform(dpr, 0, 0, dpr, 0, 0);
+				context.clearRect(0, 0, width, height);
+
+				const minSide = Math.min(width, height);
+				const driftScale = motionEnabled ? 1 : 0.42;
+				const focusX = width * 0.52 + Math.sin(now * 0.00024) * width * 0.024 * driftScale;
+				const focusY = height * 0.5 + Math.cos(now * 0.00018) * height * 0.024 * driftScale;
+				const lensX = focusX + (pointer.x - focusX) * pointer.influence * 0.36;
+				const lensY = focusY + (pointer.y - focusY) * pointer.influence * 0.36;
+
+				const halo = context.createRadialGradient(lensX, lensY, 0, lensX, lensY, minSide * 0.72);
+				halo.addColorStop(0, this.colorFromRgb(accent, 0.26 + pointer.influence * 0.16));
+				halo.addColorStop(0.3, "rgba(255, 214, 228, 0.11)");
+				halo.addColorStop(1, "rgba(255, 255, 255, 0)");
+				context.fillStyle = halo;
+				context.fillRect(0, 0, width, height);
+
+				drawOrbitRing(now, focusX, focusY, width * 0.24, height * 0.16, now * 0.00018, 0.24 + pointer.influence * 0.08, 1.25, 0);
+				drawOrbitRing(now, focusX, focusY, width * 0.34, height * 0.24, -0.92 + now * 0.00012, 0.16 + pointer.influence * 0.05, 1.05, -32);
+				drawOrbitRing(now, focusX, focusY, width * 0.17, height * 0.12, 0.48 - now * 0.00016, 0.2 + pointer.influence * 0.05, 1, -12);
+
+				const nodes = seeds.map((seed) => {
+					const x =
+						seed.x * width +
+						Math.sin(now * seed.speed + seed.phase) * seed.driftX * width * driftScale;
+					const y =
+						seed.y * height +
+						Math.cos(now * seed.speed * 1.12 + seed.phase) * seed.driftY * height * driftScale;
+					const dx = pointer.x - x;
+					const dy = pointer.y - y;
+					const distance = Math.hypot(dx, dy);
+					const influenceRadius = minSide * 0.64;
+					const influence =
+						motionEnabled && pointer.influence > 0.02
+							? Math.max(0, 1 - distance / influenceRadius) * pointer.influence
+							: 0;
+
+					return {
+						x: x + dx * influence * 0.22,
+						y: y + dy * influence * 0.22,
+						size: seed.size + influence * 3.1,
+						tone: seed.tone,
+						influence,
+					};
+				});
+
+				for (let index = 0; index < nodes.length; index += 1) {
+					for (let next = index + 1; next < nodes.length; next += 1) {
+						const nodeA = nodes[index];
+						const nodeB = nodes[next];
+						const dx = nodeA.x - nodeB.x;
+						const dy = nodeA.y - nodeB.y;
+						const distance = Math.hypot(dx, dy);
+						const maxDistance = minSide * 0.42;
+						if (distance > maxDistance) continue;
+
+						const strength = (1 - distance / maxDistance) ** 1.7;
+						context.beginPath();
+						context.moveTo(nodeA.x, nodeA.y);
+						context.lineTo(nodeB.x, nodeB.y);
+						context.lineWidth = 1 + strength * 0.9;
+						context.strokeStyle = this.colorFromRgb(accent, 0.08 + strength * 0.24 + pointer.influence * 0.06);
+						context.stroke();
+					}
+				}
+
+				for (let index = pulses.length - 1; index >= 0; index -= 1) {
+					const pulse = pulses[index];
+					const elapsed = now - pulse.startedAt;
+					if (elapsed > 780) {
+						pulses.splice(index, 1);
+						continue;
+					}
+
+					const progress = elapsed / 780;
+					context.beginPath();
+					context.arc(pulse.x, pulse.y, 18 + progress * minSide * 0.28, 0, Math.PI * 2);
+					context.lineWidth = 1.4 - progress * 0.76;
+					context.strokeStyle = this.colorFromRgb(accent, 0.34 * (1 - progress));
+					context.stroke();
+				}
+
+				context.beginPath();
+				context.arc(focusX, focusY, minSide * 0.052, 0, Math.PI * 2);
+				context.fillStyle = this.colorFromRgb(accent, 0.24 + pointer.influence * 0.08);
+				context.fill();
+
+				for (const node of nodes) {
+					context.beginPath();
+					context.arc(node.x, node.y, node.size * 2.2, 0, Math.PI * 2);
+					context.fillStyle = toneColor(node.tone, 0.1 + node.influence * 0.12);
+					context.fill();
+
+					context.beginPath();
+					context.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+					context.fillStyle = toneColor(node.tone, 0.88);
+					context.shadowColor = toneColor(node.tone, 0.52);
+					context.shadowBlur = 18;
+					context.fill();
+					context.shadowBlur = 0;
+				}
+			};
+
+			const start = () => {
+				if (animationFrame !== 0) return;
+				animationFrame = window.requestAnimationFrame(render);
+			};
+
+			const stop = () => {
+				if (animationFrame === 0) return;
+				window.cancelAnimationFrame(animationFrame);
+				animationFrame = 0;
+			};
+
+			const handleVisibility = () => {
+				if (document.hidden) {
+					stop();
+					return;
+				}
+				start();
+			};
+
+			const resizeObserver = new ResizeObserver(resize);
+			resizeObserver.observe(stage);
+			resize();
+			start();
+
+			stage.addEventListener("pointermove", updatePointer);
+			stage.addEventListener("pointerenter", handlePointerEnter);
+			stage.addEventListener("pointerleave", releasePointer);
+			stage.addEventListener("pointerdown", addPulse);
+			stage.addEventListener("pointerup", handlePointerEnd);
+			stage.addEventListener("pointercancel", releasePointer);
+			document.addEventListener("visibilitychange", handleVisibility);
+
+			this.cleanupFns.push(() => {
+				stop();
+				resizeObserver.disconnect();
+				stage.removeEventListener("pointermove", updatePointer);
+				stage.removeEventListener("pointerenter", handlePointerEnter);
+				stage.removeEventListener("pointerleave", releasePointer);
+				stage.removeEventListener("pointerdown", addPulse);
+				stage.removeEventListener("pointerup", handlePointerEnd);
+				stage.removeEventListener("pointercancel", releasePointer);
+				document.removeEventListener("visibilitychange", handleVisibility);
+			});
+		}
+
+		private readAccentRgb() {
+			const value = getComputedStyle(this).getPropertyValue("--about-active-rgb").trim();
+			return value || "170 230 219";
+		}
+
+		private colorFromRgb(rgb: string, alpha: number) {
+			const [red = 170, green = 230, blue = 219] = rgb
+				.split(/\s+/)
+				.map((value) => Number.parseFloat(value))
+				.filter((value) => Number.isFinite(value));
+			return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+		}
+
+	}
+
+	if (!customElements.get("about-interactive")) {
+		customElements.define("about-interactive", AboutInteractive);
+	}
+</script>

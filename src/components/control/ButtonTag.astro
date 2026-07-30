@@ -1,0 +1,21 @@
+---
+interface Props {
+	size?: string;
+	dot?: boolean;
+	href?: string;
+	label?: string;
+}
+const { dot, href, label }: Props = Astro.props;
+---
+<a
+	href={href}
+	aria-label={label}
+	class="group inline-flex h-8 items-center rounded-xl border border-[var(--line-divider)] bg-[var(--btn-regular-bg)]
+	px-3 text-sm font-medium text-[var(--deep-text)] shadow-[0_16px_28px_-26px_rgba(24,51,56,0.34)]
+	transition-all duration-200 hover:border-[color:var(--primary)]/22
+	hover:bg-[var(--btn-regular-bg-hover)] hover:text-[var(--primary)] active:translate-y-0
+	active:bg-[var(--btn-regular-bg-active)]"
+>
+    {dot && <div class="mr-2 h-1 w-1 rounded-md bg-[var(--btn-content)] transition group-hover:bg-[var(--primary)]"></div>}
+    <slot></slot>
+</a>

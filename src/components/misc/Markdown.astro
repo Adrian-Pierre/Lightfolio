@@ -1,0 +1,69 @@
+---
+import "@fontsource-variable/jetbrains-mono";
+import "@fontsource-variable/jetbrains-mono/wght-italic.css";
+
+interface Props {
+	class: string;
+}
+const className = Astro.props.class;
+---
+<div data-pagefind-body class={`prose prose-base !max-w-none custom-md ${className}`}>
+    <!--<div class="max-w-none custom-md">-->
+    <slot/>
+</div>
+
+<script>
+type MarkdownCopyRuntime = {
+    bound: boolean;
+    handleClick: ((event: MouseEvent) => Promise<void>) | null;
+};
+
+const markdownWindow = window as Window & {
+    __lightfolioMarkdownCopyRuntime?: MarkdownCopyRuntime;
+};
+
+const markdownCopyRuntime = (markdownWindow.__lightfolioMarkdownCopyRuntime ??= {
+    bound: false,
+    handleClick: null,
+});
+
+if (!markdownCopyRuntime.bound) {
+    markdownCopyRuntime.handleClick = async (event) => {
+        const rawTarget = event.target;
+        if (!(rawTarget instanceof Element)) return;
+
+        const target = rawTarget.closest(".copy-btn");
+        if (!(target instanceof HTMLElement)) return;
+
+        const preEle = target.closest("pre");
+        const codeEle = preEle?.querySelector("code");
+        const code = Array.from(codeEle?.querySelectorAll(".code:not(summary *)") ?? [])
+            .map((element) => element.textContent)
+            .map((text) => text === "\n" ? "" : text)
+            .join("\n");
+        if (!code || !navigator.clipboard?.writeText) return;
+
+        try {
+            await navigator.clipboard.writeText(code);
+        } catch {
+            return;
+        }
+
+        const timeoutId = Number.parseInt(target.dataset.timeoutId ?? "", 10);
+        if (Number.isFinite(timeoutId)) {
+            window.clearTimeout(timeoutId);
+        }
+
+        target.classList.add("success");
+
+        const newTimeoutId = window.setTimeout(() => {
+            target.classList.remove("success");
+        }, 1000);
+
+        target.dataset.timeoutId = String(newTimeoutId);
+    };
+
+    document.addEventListener("click", markdownCopyRuntime.handleClick);
+    markdownCopyRuntime.bound = true;
+}
+</script>

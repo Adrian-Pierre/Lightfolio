@@ -1,0 +1,32 @@
+.scrollbar-base.os-scrollbar {
+    @apply transition-all;
+    pointer-events: unset;
+
+    &.os-scrollbar-horizontal {
+        @apply py-1 px-2 h-4;
+        .os-scrollbar-track .os-scrollbar-handle {
+            @apply rounded-full h-1;
+        }
+        &:hover .os-scrollbar-track .os-scrollbar-handle {
+            @apply h-2;
+        }
+    }
+
+    &.os-scrollbar-vertical {
+        @apply px-1 py-1 w-4;
+        .os-scrollbar-track .os-scrollbar-handle {
+            @apply rounded-full w-1;
+        }
+        &:hover .os-scrollbar-track .os-scrollbar-handle {
+            @apply w-2;
+        }
+    }
+}
+
+.os-scrollbar {
+    &.scrollbar-auto {
+        --os-handle-bg: var(--scrollbar-bg);
+        --os-handle-bg-hover: var(--scrollbar-bg-hover);
+        --os-handle-bg-active: var(--scrollbar-bg-active);
+    }
+}

@@ -1,0 +1,500 @@
+---
+import { getCollection } from "astro:content";
+import Markdown from "@components/misc/Markdown.astro";
+import { siteConfig } from "../config";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+
+interface FriendItem {
+	title: string;
+	imgurl: string;
+	desc: string;
+	siteurl: string;
+	tags?: string[];
+}
+
+const specPosts = await getCollection("spec");
+const friendsPost = specPosts.find((post) => post.id === "friends.md");
+
+if (!friendsPost) {
+	throw new Error("Friends page content not found");
+}
+
+const { Content } = await friendsPost.render();
+
+const items: FriendItem[] = [];
+
+const palettes = [
+	{ accent: "136 177 164", soft: "244 249 246" },
+	{ accent: "152 178 208", soft: "244 247 252" },
+	{ accent: "214 176 158", soft: "252 246 242" },
+	{ accent: "176 164 206", soft: "247 244 252" },
+];
+
+const friends = items.map((item, index) => {
+	const tags = (item.tags ?? []).filter((tag) => tag.trim().length > 0);
+	const palette = palettes[index % palettes.length];
+
+	let host = item.siteurl;
+
+	try {
+		host = new URL(item.siteurl).hostname.replace(/^www\./, "");
+	} catch {
+		host = item.siteurl;
+	}
+
+	return {
+		...item,
+		host,
+		tags,
+		accent: palette.accent,
+		soft: palette.soft,
+	};
+});
+---
+
+<MainGridLayout title="Friends" description="Friends">
+	<div class="friends-page">
+		<div hidden data-lang-document-title-en={`Friends - ${siteConfig.title}`}></div>
+		<section class="friends-hero card-base relative overflow-hidden px-6 py-5 md:px-8 md:py-6">
+			<div class="friends-hero-orb is-left"></div>
+			<div class="friends-hero-orb is-right"></div>
+
+			<div class="friends-hero-inner relative z-10">
+				<div class="friends-hero-copy">
+					<p class="friends-kicker">Notebook Network</p>
+					<h1 class="friends-title mt-2">
+						<span>Friends</span>
+					</h1>
+					<p class="mt-3 max-w-[36rem] text-[0.98rem] leading-8 text-75 md:text-[1.02rem]">
+						A quiet place for thoughtful sites, useful notes, and people worth revisiting.
+					</p>
+				</div>
+			</div>
+		</section>
+
+		<section class="friends-list">
+			{friends.map((item) => (
+				<a
+					href={item.siteurl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="friend-card card-base group relative overflow-hidden p-5 md:p-6"
+					style={`--friend-accent:${item.accent}; --friend-soft:${item.soft};`}
+				>
+					<div class="friend-card-glow"></div>
+
+					<div class="friend-card-inner relative z-10">
+						<div class="friend-avatar-shell">
+							<img
+								src={item.imgurl}
+								alt={`${item.title} avatar`}
+								loading="lazy"
+								class="h-full w-full rounded-[1.15rem] object-cover"
+							/>
+						</div>
+
+						<div class="friend-card-main">
+							<h2 class="truncate text-[1.14rem] font-semibold text-[var(--deep-text)]">
+								{item.title}
+							</h2>
+							<p class="mt-1 truncate text-sm text-50">{item.host}</p>
+							<p class="friend-desc">
+								{item.desc}
+							</p>
+
+							<div class="friend-tags-wrap">
+							{item.tags.length > 0 ? (
+								item.tags.map((tag) => <span class="friend-tag">{tag}</span>)
+							) : (
+								<span class="friend-tag is-muted">Friend Link</span>
+							)}
+							</div>
+						</div>
+
+						<span class="friend-open" aria-hidden="true">
+							<svg viewBox="0 0 24 24" class="h-[1.15rem] w-[1.15rem]" fill="none">
+								<path
+									d="M7 17L17 7M9 7H17V15"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								/>
+							</svg>
+						</span>
+					</div>
+				</a>
+			))}
+		</section>
+
+		<section class="friends-footer-panels">
+			<div class="friends-footer-card card-base relative overflow-hidden px-6 py-6 md:px-7 md:py-7">
+				<div class="friends-panel-glow is-note"></div>
+				<div class="relative z-10">
+					<div class="mb-4 flex items-center gap-3">
+						<span class="friends-section-dot"></span>
+						<h2 class="text-[1.18rem] font-semibold text-[var(--deep-text)]">Exchange Notes</h2>
+					</div>
+
+					<Markdown class="friends-markdown">
+						<Content />
+					</Markdown>
+				</div>
+			</div>
+
+		</section>
+	</div>
+</MainGridLayout>
+
+<style>
+	.friends-page {
+		--friends-block-gap: 1.6rem;
+		--friends-glow-mint: rgba(163, 199, 187, 0.16);
+		--friends-glow-blue: rgba(177, 197, 223, 0.15);
+		--friends-glow-peach: rgba(234, 205, 193, 0.14);
+		--friends-dot-shadow: rgba(163, 199, 187, 0.12);
+		display: grid;
+		gap: var(--friends-block-gap);
+	}
+
+	.friends-hero {
+		width: min(100%, 58rem);
+		background:
+			linear-gradient(
+				140deg,
+				rgba(255, 252, 252, 0.92),
+				rgba(248, 244, 247, 0.84) 38%,
+				rgba(244, 249, 246, 0.84) 100%
+			);
+		box-shadow: 0 34px 76px -50px rgba(78, 90, 102, 0.2);
+	}
+
+	.friends-hero-inner {
+		display: flex;
+		align-items: center;
+		min-height: 9.75rem;
+	}
+
+	.friends-hero-copy {
+		max-width: 42rem;
+		padding: 0.35rem 0;
+	}
+
+	.friends-title {
+		display: inline-block;
+		font-size: clamp(2.75rem, 5vw, 3.85rem);
+		line-height: 1.02;
+		font-weight: 900;
+		letter-spacing: 0.08em;
+		color: rgb(73 85 93);
+		text-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.84),
+			0 12px 24px rgba(177, 197, 223, 0.08);
+		-webkit-text-stroke: 0.012em rgba(73, 85, 93, 0.03);
+	}
+
+	.friends-hero-orb {
+		position: absolute;
+		border-radius: 999px;
+		filter: blur(12px);
+		opacity: 0.85;
+	}
+
+	.friends-hero-orb.is-left {
+		left: -4rem;
+		top: -4.5rem;
+		height: 12rem;
+		width: 12rem;
+		background: radial-gradient(circle, var(--friends-glow-mint), transparent 68%);
+	}
+
+	.friends-hero-orb.is-right {
+		right: -2rem;
+		bottom: -5rem;
+		height: 14rem;
+		width: 14rem;
+		background: radial-gradient(circle, var(--friends-glow-blue), transparent 68%);
+	}
+
+	.friends-kicker {
+		font-size: 0.76rem;
+		font-weight: 700;
+		letter-spacing: 0.35em;
+		text-transform: uppercase;
+		color: var(--primary);
+	}
+
+	.friend-card {
+		background:
+			linear-gradient(
+				160deg,
+				rgba(255, 252, 252, 0.94),
+				rgba(249, 245, 247, 0.82) 48%,
+				rgba(247, 250, 248, 0.82) 100%
+			);
+		border-color: rgb(var(--friend-accent) / 0.16);
+		box-shadow: 0 30px 62px -44px rgba(78, 90, 102, 0.22);
+		transform: translateY(0);
+	}
+
+	.friends-list {
+		display: grid;
+		gap: var(--friends-block-gap);
+	}
+
+	.friends-footer-panels {
+		display: grid;
+		gap: var(--friends-block-gap);
+	}
+
+	.friends-footer-card {
+		transition:
+			transform var(--page-transition-duration-fast) var(--page-transition-easing),
+			border-color var(--page-transition-duration-fast) ease,
+			box-shadow var(--page-transition-duration-fast) ease;
+	}
+
+	.friends-footer-card:hover {
+		transform: translateY(-3px);
+		border-color: rgba(163, 199, 187, 0.18);
+		box-shadow: 0 30px 56px -42px rgba(78, 90, 102, 0.22);
+	}
+
+	.friend-card-inner {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 1.2rem;
+	}
+
+	.friend-card-main {
+		min-width: 0;
+	}
+
+	.friend-card::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background:
+			radial-gradient(circle at top right, rgb(var(--friend-accent) / 0.14), transparent 34%),
+			linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent 55%);
+		opacity: 0.95;
+		transition: opacity 260ms ease;
+	}
+
+	.friend-card:hover {
+		transform: translateY(-5px);
+		border-color: rgb(var(--friend-accent) / 0.28);
+		box-shadow: 0 34px 74px -44px rgba(78, 90, 102, 0.28);
+	}
+
+	.friend-card-glow {
+		position: absolute;
+		right: -2.4rem;
+		top: -2.8rem;
+		height: 8rem;
+		width: 8rem;
+		border-radius: 999px;
+		background: radial-gradient(circle, rgb(var(--friend-accent) / 0.22), transparent 70%);
+		filter: blur(10px);
+	}
+
+	.friend-avatar-shell {
+		position: relative;
+		flex-shrink: 0;
+		width: 5.2rem;
+		height: 5.2rem;
+		padding: 0.28rem;
+		border-radius: 1.35rem;
+		background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgb(var(--friend-soft) / 0.98));
+		box-shadow:
+			0 22px 38px -28px rgb(var(--friend-accent) / 0.32),
+			inset 0 1px 0 rgba(255, 255, 255, 0.72);
+	}
+
+	.friend-avatar-shell::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		border: 1px solid rgb(var(--friend-accent) / 0.14);
+	}
+
+	.friend-open {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 2.7rem;
+		height: 2.7rem;
+		border-radius: 999px;
+		background: rgb(var(--friend-accent) / 0.1);
+		color: rgb(var(--friend-accent));
+		transition:
+			transform 240ms ease,
+			background-color 240ms ease;
+	}
+
+	.friend-card:hover .friend-open {
+		transform: translateX(2px) scale(1.04);
+		background: rgb(var(--friend-accent) / 0.16);
+	}
+
+	.friend-tag {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.42rem 0.8rem;
+		border-radius: 999px;
+		border: 1px solid rgb(var(--friend-accent) / 0.14);
+		background: rgb(var(--friend-accent) / 0.08);
+		color: rgb(var(--friend-accent));
+		font-size: 0.82rem;
+		font-weight: 600;
+		line-height: 1;
+	}
+
+	.friend-tag.is-muted {
+		border-color: rgba(0, 0, 0, 0.06);
+		background: rgba(255, 255, 255, 0.56);
+		color: var(--deep-text);
+	}
+
+	.friend-desc {
+		margin-top: 0.7rem;
+		font-size: 0.96rem;
+		line-height: 1.8;
+		color: rgb(74 88 95 / 0.76);
+	}
+
+	.friend-tags-wrap {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.55rem;
+		margin-top: 1rem;
+	}
+
+	.friends-panel-glow {
+		position: absolute;
+		border-radius: 999px;
+		filter: blur(12px);
+		opacity: 0.8;
+	}
+
+	.friends-panel-glow.is-note {
+		left: -3rem;
+		top: -3rem;
+		height: 10rem;
+		width: 10rem;
+		background: radial-gradient(circle, var(--friends-glow-peach), transparent 68%);
+	}
+
+	.friends-section-dot {
+		display: inline-block;
+		width: 0.72rem;
+		height: 0.72rem;
+		border-radius: 999px;
+		background: linear-gradient(135deg, rgba(163, 199, 187, 0.96), rgba(177, 197, 223, 0.88));
+		box-shadow: 0 0 0 0.32rem var(--friends-dot-shadow);
+	}
+
+	.friends-markdown {
+		font-size: 0.98rem;
+		line-height: 1.9;
+		color: var(--deep-text);
+	}
+
+	.friends-markdown :global(p) {
+		margin: 0.7rem 0;
+		color: rgba(76, 88, 95, 0.88);
+	}
+
+	.friends-markdown :global(p + p) {
+		margin-top: 0.95rem;
+	}
+
+	.friends-markdown :global(p + .expressive-code),
+	.friends-markdown :global(p + pre) {
+		margin-top: 1.3rem;
+	}
+
+	.friends-markdown :global(.expressive-code),
+	.friends-markdown :global(pre) {
+		margin-top: 1.15rem;
+		overflow: visible;
+		border-radius: 1.35rem;
+		border: 1px solid rgba(163, 199, 187, 0.18);
+		box-shadow: 0 18px 38px -34px rgba(78, 90, 102, 0.2);
+	}
+
+	.friends-markdown :global(.expressive-code .frame) {
+		border-radius: 1.35rem;
+		overflow: hidden;
+	}
+
+	.friends-markdown :global(.expressive-code .header) {
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+	}
+
+	.friends-markdown :global(.expressive-code pre) {
+		overflow-x: auto !important;
+		overflow-y: hidden !important;
+		scrollbar-gutter: stable both-edges;
+	}
+
+	.friends-markdown :global(.expressive-code pre.wrap .ec-line .code) {
+		min-width: max-content !important;
+		white-space: pre !important;
+		overflow-wrap: normal !important;
+		word-break: normal !important;
+	}
+
+	@media (max-width: 768px) {
+		.friends-page {
+			--friends-block-gap: 1.25rem;
+		}
+
+		.friends-hero-inner {
+			min-height: auto;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.friends-hero {
+			width: 100%;
+			padding-top: 1.35rem;
+			padding-bottom: 1.35rem;
+		}
+
+		.friend-card-inner {
+			grid-template-columns: auto minmax(0, 1fr);
+			align-items: start;
+		}
+
+		.friend-card-main {
+			display: grid;
+		}
+
+		.friend-open {
+			grid-column: 2;
+			justify-self: end;
+			margin-top: 0.2rem;
+		}
+
+		.friend-desc,
+		.friend-tags-wrap {
+			grid-column: 1 / -1;
+		}
+
+		.friend-avatar-shell {
+			width: 4.6rem;
+			height: 4.6rem;
+			border-radius: 1.2rem;
+		}
+
+		.friend-open {
+			width: 2.45rem;
+			height: 2.45rem;
+		}
+	}
+</style>

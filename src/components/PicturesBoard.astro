@@ -1,0 +1,806 @@
+---
+import type { PictureItem } from "@/data/pictures";
+import ImageWrapper from "./misc/ImageWrapper.astro";
+
+interface Props {
+	entries: PictureItem[];
+}
+
+const { entries } = Astro.props;
+
+const fallbackRotations = [-11, 7, -5, 13, 4, -9, 10, -14];
+const rotationOffsets = [-1.4, 0.8, -2.2, 1.9, -0.9, 2.6, -1.7, 1.3];
+const sizeScales = [1.04, 0.92, 1.08, 0.96, 0.88, 1.02, 0.94, 1.06];
+const occupiedPositions = new Map<string, number>();
+const basePictureWidth = Math.round(
+	(entries.find((entry) => typeof entry.width === "number")?.width ?? 228) *
+		0.8,
+);
+
+function clampRotation(value: number) {
+	return Math.max(-16, Math.min(16, value));
+}
+
+const pictures = entries.map((entry, index) => {
+	const hasRequestedPosition =
+		typeof entry.x === "number" && typeof entry.y === "number";
+	const positionKey = hasRequestedPosition
+		? `${entry.x?.toFixed(2)}:${entry.y?.toFixed(2)}`
+		: "";
+	const duplicateCount = hasRequestedPosition
+		? (occupiedPositions.get(positionKey) ?? 0)
+		: 0;
+	if (hasRequestedPosition) {
+		occupiedPositions.set(positionKey, duplicateCount + 1);
+	}
+	const useAutomaticLayout = !hasRequestedPosition || duplicateCount > 0;
+	const rotationOffset = rotationOffsets[index % rotationOffsets.length];
+	const duplicateRotationShift =
+		duplicateCount === 0
+			? 0
+			: (duplicateCount % 2 === 0 ? -1 : 1) * (1.4 + duplicateCount * 0.55);
+	const resolvedRotateBase =
+		entry.rotate ?? fallbackRotations[index % fallbackRotations.length];
+
+	return {
+		...entry,
+		index,
+		title: entry.title || `图片 ${index + 1}`,
+		x: useAutomaticLayout ? undefined : entry.x,
+		y: useAutomaticLayout ? undefined : entry.y,
+		layout: useAutomaticLayout ? "auto" : "fixed",
+		rotate: clampRotation(
+			resolvedRotateBase + rotationOffset + duplicateRotationShift,
+		),
+		width:
+			typeof entry.width === "number"
+				? Math.round(entry.width * 0.8)
+				: Math.round(basePictureWidth * sizeScales[index % sizeScales.length]),
+		fit: entry.fit ?? "contain",
+	};
+});
+---
+
+<pictures-board class="block w-full" data-ready="false">
+	<div class="board-shell relative overflow-hidden rounded-[1.6rem] border border-[var(--line-divider)] p-3 backdrop-blur-sm md:p-4" data-board-shell data-parallax="idle">
+		<div class="board-parallax-layer board-parallax-layer--grid"></div>
+		<div class="board-parallax-layer board-parallax-layer--glow"></div>
+		<div class="board-parallax-layer board-parallax-layer--veil"></div>
+
+				<div class="board-stage relative overflow-hidden rounded-[1.3rem]" data-stage>
+			{pictures.length === 0 ? (
+				<div class="board-empty" role="status">No pictures yet.</div>
+			) : pictures.map((picture) => (
+				<article
+					class="picture-card absolute overflow-hidden border border-black/5 bg-[rgba(255,255,255,0.92)] shadow-[0_24px_50px_-30px_rgba(24,51,56,0.38)] outline-none transition-[box-shadow,border-color,transform] duration-300 ease-out"
+					data-picture-card
+					data-index={String(picture.index)}
+					data-layout={picture.layout}
+					data-x={picture.x === undefined ? undefined : String(picture.x)}
+					data-y={picture.y === undefined ? undefined : String(picture.y)}
+					tabindex="0"
+					aria-label={picture.title}
+					draggable="false"
+					style={`--picture-width:${picture.width}px; --picture-rotate:${picture.rotate}deg;${picture.aspectRatio ? ` --picture-ratio:${picture.aspectRatio};` : ""} animation-delay: calc(var(--content-delay) + ${picture.index * 45}ms);`}
+				>
+					<div class="picture-card-frame h-full w-full">
+						<ImageWrapper
+							src={picture.image}
+							alt={picture.title}
+							class="picture-media h-full w-full pointer-events-none select-none"
+							fit={picture.fit}
+							overlay={false}
+						/>
+					</div>
+				</article>
+			))}
+		</div>
+	</div>
+</pictures-board>
+
+<style>
+	pictures-board {
+		display: block;
+		padding-bottom: 2rem;
+	}
+
+	.board-shell {
+		--board-shift-x: 0px;
+		--board-shift-y: 0px;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(243, 248, 247, 0.78));
+		box-shadow: 0 34px 76px -48px rgba(24, 51, 56, 0.3);
+		transition:
+			opacity var(--page-transition-duration-fast) var(--page-transition-easing),
+			transform var(--page-transition-duration) var(--page-transition-easing);
+	}
+
+	.board-parallax-layer {
+		position: absolute;
+		pointer-events: none;
+		will-change: transform;
+		transition:
+			transform 260ms var(--page-transition-easing),
+			opacity 240ms ease;
+	}
+
+	.board-parallax-layer--grid {
+		inset: 0;
+		opacity: 0.34;
+		background-image:
+			linear-gradient(to right, rgba(255, 255, 255, 0.24) 1px, transparent 1px),
+			linear-gradient(to bottom, rgba(255, 255, 255, 0.24) 1px, transparent 1px);
+		background-size: 24px 24px;
+		transform: translate3d(calc(var(--board-shift-x) * -0.28), calc(var(--board-shift-y) * -0.28), 0);
+	}
+
+	.board-parallax-layer--glow {
+		inset: -8%;
+		opacity: 0.92;
+		background:
+			radial-gradient(circle at top left, rgba(120, 168, 158, 0.16), transparent 32rem),
+			radial-gradient(circle at bottom right, rgba(241, 248, 246, 0.84), transparent 26rem),
+			radial-gradient(circle at 84% 18%, rgba(194, 225, 255, 0.22), transparent 20rem);
+		transform: translate3d(calc(var(--board-shift-x) * 0.72), calc(var(--board-shift-y) * 0.72), 0);
+	}
+
+	.board-parallax-layer--veil {
+		inset: 0;
+		opacity: 0.58;
+		background:
+			linear-gradient(140deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 42%),
+			radial-gradient(circle at 20% 14%, rgba(255, 218, 229, 0.18), transparent 24rem);
+		transform: translate3d(calc(var(--board-shift-x) * -0.16), calc(var(--board-shift-y) * -0.16), 0);
+	}
+
+	.board-shell[data-parallax="active"] .board-parallax-layer--glow {
+		opacity: 1;
+	}
+
+	.board-stage {
+		height: max(34rem, var(--board-layout-height, 0px));
+	}
+
+	.board-empty {
+		display: grid;
+		place-items: center;
+		height: 100%;
+		color: color-mix(in srgb, var(--deep-text) 48%, transparent);
+		font-size: 0.92rem;
+	}
+
+	pictures-board[data-ready="false"] .board-shell {
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transform: translateY(var(--page-transition-distance));
+	}
+
+	pictures-board[data-ready="true"] .board-shell {
+		opacity: 1;
+		visibility: visible;
+		transform: translateY(0);
+	}
+
+	.picture-card {
+		--picture-corner: 1.08rem;
+		width: min(calc(var(--picture-width) * 0.78), 28vw);
+		aspect-ratio: var(--picture-ratio, 4 / 5);
+		border-radius: var(--picture-corner);
+		box-sizing: border-box;
+		cursor: grab;
+		touch-action: none;
+		user-select: none;
+		-webkit-user-select: none;
+		will-change: transform;
+		transform:
+			translateY(calc(var(--picture-entry-offset, 0px) + var(--picture-lift, 0px)))
+			rotate(var(--picture-rotate, 0deg))
+			scale(var(--picture-scale, 1));
+		transition:
+			opacity var(--page-transition-duration-fast) var(--page-transition-easing),
+			transform var(--page-transition-duration-slow) var(--page-transition-easing),
+			box-shadow 240ms ease,
+			border-color 240ms ease;
+	}
+
+	pictures-board[data-ready="false"] .picture-card {
+		opacity: 0;
+		pointer-events: none;
+		--picture-entry-offset: var(--page-transition-distance);
+	}
+
+	pictures-board[data-ready="true"] .picture-card {
+		opacity: 1;
+		--picture-entry-offset: 0px;
+	}
+
+	.picture-card:active {
+		cursor: grabbing;
+	}
+
+	.picture-card:hover,
+	.picture-card:focus-visible {
+		--picture-lift: -8px;
+		--picture-scale: 1.035;
+	}
+
+	.picture-card[data-dragging="true"] {
+		--picture-lift: -4px;
+		--picture-scale: 1.024;
+		box-shadow: 0 28px 52px -30px rgba(24, 51, 56, 0.34);
+		cursor: grabbing;
+	}
+
+	.picture-card-frame {
+		position: relative;
+		border-radius: inherit;
+		overflow: hidden;
+	}
+
+	.picture-card:hover .picture-media,
+	.picture-card:focus-visible .picture-media {
+		transform: scale(1.02);
+		filter: saturate(0.94) brightness(0.88);
+	}
+
+	.picture-media {
+		border-radius: inherit;
+		transition:
+			transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+			filter 260ms ease;
+	}
+
+	@media (max-width: 900px) {
+		.picture-card {
+			width: min(calc(var(--picture-width) * 0.72), 36vw);
+		}
+	}
+
+	@media (min-width: 768px) {
+		.board-stage {
+			height: max(40rem, var(--board-layout-height, 0px));
+		}
+	}
+
+	@media (max-width: 640px) {
+		.board-shell {
+			padding: 0.55rem;
+			border-radius: 1.15rem;
+		}
+
+		.board-stage {
+			height: max(min(31rem, 74vh), var(--board-layout-height, 0px));
+			border-radius: 0.95rem;
+		}
+
+		.picture-card {
+			width: min(calc(var(--picture-width) * 0.66), 42vw);
+			--picture-corner: 0.88rem;
+		}
+
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.board-parallax-layer,
+		.picture-card,
+		.picture-media {
+			transition: none !important;
+		}
+	}
+</style>
+
+<script>
+	class PicturesBoard extends HTMLElement {
+		private stage: HTMLElement | null = null;
+		private shell: HTMLElement | null = null;
+		private cards: HTMLElement[] = [];
+		private resizeObserver: ResizeObserver | null = null;
+		private eventController: AbortController | null = null;
+		private cleanupFns: Array<() => void> = [];
+		private nextZIndex = 20;
+		private initialFrame = 0;
+		private layoutFrame = 0;
+		private lastStageWidth = 0;
+		private lastStageHeight = 0;
+		private lastEdgePadding = 0;
+
+		connectedCallback() {
+			this.eventController?.abort();
+			this.eventController = new AbortController();
+			this.stage = this.querySelector("[data-stage]");
+			this.shell = this.querySelector("[data-board-shell]");
+			this.cards = Array.from(this.querySelectorAll("[data-picture-card]"));
+			this.dataset.ready = "false";
+
+			if (!(this.stage instanceof HTMLElement) || this.cards.length === 0) {
+				return;
+			}
+
+			this.initialFrame = window.requestAnimationFrame(() => {
+				this.initialFrame = 0;
+				if (!this.isConnected) return;
+				this.syncAllCardRatios();
+				this.layoutCards();
+				this.dataset.ready = "true";
+			});
+
+			this.setupParallax();
+			this.cards.forEach((card) => this.bindCard(card));
+			this.resizeObserver = new ResizeObserver((entries) => {
+				const entry = entries[0];
+				if (!entry || this.dataset.ready !== "true") return;
+
+				const edgePadding = this.getEdgePadding();
+				const widthChanged = Math.abs(entry.contentRect.width - this.lastStageWidth) > 0.5;
+				const heightChanged = Math.abs(entry.contentRect.height - this.lastStageHeight) > 0.5;
+				if (!widthChanged && !heightChanged && edgePadding === this.lastEdgePadding) return;
+
+				this.scheduleLayoutCards();
+			});
+			this.resizeObserver.observe(this.stage);
+		}
+
+		disconnectedCallback() {
+			this.eventController?.abort();
+			this.eventController = null;
+			this.resizeObserver?.disconnect();
+			if (this.initialFrame !== 0) {
+				window.cancelAnimationFrame(this.initialFrame);
+				this.initialFrame = 0;
+			}
+			if (this.layoutFrame !== 0) {
+				window.cancelAnimationFrame(this.layoutFrame);
+				this.layoutFrame = 0;
+			}
+			this.cleanupFns.forEach((cleanup) => cleanup());
+			this.cleanupFns = [];
+		}
+
+		private syncAllCardRatios() {
+			for (const card of this.cards) {
+				this.syncCardRatio(card);
+			}
+		}
+
+		private getEdgePadding() {
+			if (window.innerWidth <= 640) return 6;
+			if (window.innerWidth <= 900) return 10;
+			return 14;
+		}
+
+		private setupParallax() {
+			if (!(this.shell instanceof HTMLElement)) return;
+			if (!window.matchMedia("(pointer: fine)").matches) return;
+			if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+			const signal = this.eventController?.signal;
+			if (!signal) return;
+
+			let frame = 0;
+			let currentX = 0;
+			let currentY = 0;
+			let targetX = 0;
+			let targetY = 0;
+			let shellRect: DOMRect | null = null;
+
+			const tick = () => {
+				currentX += (targetX - currentX) * 0.14;
+				currentY += (targetY - currentY) * 0.14;
+
+				this.shell?.style.setProperty("--board-shift-x", `${currentX.toFixed(2)}px`);
+				this.shell?.style.setProperty("--board-shift-y", `${currentY.toFixed(2)}px`);
+
+				if (
+					Math.abs(targetX - currentX) < 0.08 &&
+					Math.abs(targetY - currentY) < 0.08 &&
+					Math.abs(currentX) < 0.08 &&
+					Math.abs(currentY) < 0.08
+				) {
+					frame = 0;
+					this.shell?.style.setProperty("--board-shift-x", "0px");
+					this.shell?.style.setProperty("--board-shift-y", "0px");
+					return;
+				}
+
+				frame = window.requestAnimationFrame(tick);
+			};
+
+			const ensureFrame = () => {
+				if (frame !== 0) return;
+				frame = window.requestAnimationFrame(tick);
+			};
+
+			const cacheShellRect = () => {
+				shellRect = this.shell?.getBoundingClientRect() ?? null;
+			};
+
+			const invalidateShellRect = () => {
+				shellRect = null;
+			};
+
+			const onMove = (event: PointerEvent) => {
+				if (!shellRect) cacheShellRect();
+				if (!shellRect) return;
+
+				const relativeX = (event.clientX - shellRect.left) / shellRect.width - 0.5;
+				const relativeY = (event.clientY - shellRect.top) / shellRect.height - 0.5;
+
+				targetX = relativeX * 18;
+				targetY = relativeY * 14;
+				if (this.shell) {
+					this.shell.dataset.parallax = "active";
+				}
+				ensureFrame();
+			};
+
+			const reset = () => {
+				targetX = 0;
+				targetY = 0;
+				shellRect = null;
+				if (this.shell) {
+					this.shell.dataset.parallax = "idle";
+				}
+				ensureFrame();
+			};
+
+			this.shell.addEventListener("pointerenter", cacheShellRect, { signal });
+			this.shell.addEventListener("pointermove", onMove, { signal });
+			this.shell.addEventListener("pointerleave", reset, { signal });
+			window.addEventListener("scroll", invalidateShellRect, { passive: true, signal });
+			this.cleanupFns.push(() => {
+				if (frame !== 0) {
+					window.cancelAnimationFrame(frame);
+				}
+			});
+		}
+
+		private syncCardRatio(card: HTMLElement) {
+			if (card.style.getPropertyValue("--picture-ratio")) return;
+			const signal = this.eventController?.signal;
+			if (!signal) return;
+
+			const image = card.querySelector("img");
+			if (!(image instanceof HTMLImageElement)) return;
+
+			const applyRatio = () => {
+				if (!image.naturalWidth || !image.naturalHeight) return;
+
+				card.style.setProperty(
+					"--picture-ratio",
+					`${image.naturalWidth} / ${image.naturalHeight}`,
+				);
+				this.scheduleLayoutCards();
+			};
+
+			if (image.complete) {
+				applyRatio();
+				return;
+			}
+
+			image.addEventListener("load", applyRatio, { once: true, signal });
+		}
+
+		private layoutCards() {
+			if (!(this.stage instanceof HTMLElement)) return;
+
+			const stageWidth = this.stage.clientWidth;
+			const edgePadding = this.getEdgePadding();
+			const measurements = this.cards.map((card) => ({
+				card,
+				index: Number(card.dataset.index || 0),
+				width: card.offsetWidth,
+				height: card.offsetHeight,
+				layout: card.dataset.layout || "auto",
+				x: Number(card.dataset.x),
+				y: Number(card.dataset.y),
+				left: Number.parseFloat(card.style.left || "0"),
+				top: Number.parseFloat(card.style.top || "0"),
+			}));
+			const contentWidth = Math.max(stageWidth - edgePadding * 2, 1);
+			const totalCardArea = measurements.reduce(
+				(total, { width, height }) => total + width * height,
+				0,
+			);
+			const density = window.innerWidth <= 640 ? 0.66 : window.innerWidth <= 900 ? 0.54 : 0.43;
+			const tallestCard = Math.max(...measurements.map(({ height }) => height), 0);
+			const stageHeight = Math.max(
+				this.getMinimumStageHeight(),
+				edgePadding * 2 + tallestCard,
+				edgePadding * 2 + totalCardArea / (contentWidth * density),
+			);
+			const positions: Array<{
+				card: HTMLElement;
+				left: number;
+				top: number;
+				width: number;
+				height: number;
+			}> = [];
+
+			for (const measurement of measurements) {
+				const { card, width, height, layout, x, y, left, top } = measurement;
+				if (layout === "auto") continue;
+
+				const maxLeft = Math.max(stageWidth - width - edgePadding * 2, 0);
+				const maxTop = Math.max(stageHeight - height - edgePadding * 2, 0);
+				positions.push({
+					card,
+					left:
+						layout === "fixed"
+							? edgePadding + (maxLeft * this.clamp(x, 0, 100)) / 100
+							: this.clamp(left, edgePadding, edgePadding + maxLeft),
+					top:
+						layout === "fixed"
+							? edgePadding + (maxTop * this.clamp(y, 0, 100)) / 100
+							: this.clamp(top, edgePadding, edgePadding + maxTop),
+					width,
+					height,
+				});
+			}
+
+			for (const measurement of measurements) {
+				const { card, index, width, height, layout } = measurement;
+				if (layout !== "auto") continue;
+
+				const position = this.findOrganicPosition(
+					index,
+					width,
+					height,
+					stageWidth,
+					stageHeight,
+					edgePadding,
+					positions,
+				);
+				positions.push({ card, width, height, ...position });
+			}
+
+			this.stage.style.setProperty("--board-layout-height", `${stageHeight}px`);
+			for (const { card, left, top } of positions) {
+				card.style.left = `${left}px`;
+				card.style.top = `${top}px`;
+				if (!card.style.zIndex) {
+					card.style.zIndex = String(this.nextZIndex++);
+				}
+			}
+
+			this.lastStageWidth = stageWidth;
+			this.lastStageHeight = stageHeight;
+			this.lastEdgePadding = edgePadding;
+		}
+
+		private findOrganicPosition(
+			index: number,
+			width: number,
+			height: number,
+			stageWidth: number,
+			stageHeight: number,
+			edgePadding: number,
+			occupied: Array<{ left: number; top: number; width: number; height: number }>,
+		) {
+			const maxLeft = Math.max(stageWidth - width - edgePadding * 2, 0);
+			const maxTop = Math.max(stageHeight - height - edgePadding * 2, 0);
+			const anchorX = this.fraction(0.5 + (index + 1) * 0.754877666);
+			const anchorY = this.fraction(0.5 + (index + 1) * 0.569840296);
+			const targetLeft = edgePadding + maxLeft * anchorX;
+			const targetTop = edgePadding + maxTop * anchorY;
+			const diagonal = Math.max(Math.hypot(stageWidth, stageHeight), 1);
+			let bestLeft = targetLeft;
+			let bestTop = targetTop;
+			let bestScore = Number.POSITIVE_INFINITY;
+
+			for (let attempt = 0; attempt < 120; attempt++) {
+				const left =
+					attempt === 0
+						? targetLeft
+						: edgePadding +
+							maxLeft * this.pseudoRandom((index + 1) * 1009 + attempt * 9176 + 17);
+				const top =
+					attempt === 0
+						? targetTop
+						: edgePadding +
+							maxTop * this.pseudoRandom((index + 1) * 2027 + attempt * 6113 + 53);
+				const centerX = left + width / 2;
+				const centerY = top + height / 2;
+				const targetDistance =
+					Math.hypot(centerX - (targetLeft + width / 2), centerY - (targetTop + height / 2)) /
+					diagonal;
+				let overlapPenalty = 0;
+				let nearestDistance = 1;
+
+				for (const placed of occupied) {
+					const collisionGap = 4;
+					const overlapWidth = Math.max(
+						0,
+						Math.min(left + width, placed.left + placed.width + collisionGap) -
+							Math.max(left, placed.left - collisionGap),
+					);
+					const overlapHeight = Math.max(
+						0,
+						Math.min(top + height, placed.top + placed.height + collisionGap) -
+							Math.max(top, placed.top - collisionGap),
+					);
+					const overlapRatio =
+						(overlapWidth * overlapHeight) /
+						Math.max(Math.min(width * height, placed.width * placed.height), 1);
+					overlapPenalty += overlapRatio * overlapRatio + overlapRatio * 0.2;
+
+					const placedCenterX = placed.left + placed.width / 2;
+					const placedCenterY = placed.top + placed.height / 2;
+					nearestDistance = Math.min(
+						nearestDistance,
+						Math.hypot(centerX - placedCenterX, centerY - placedCenterY) / diagonal,
+					);
+				}
+
+				const score = overlapPenalty * 1400 + targetDistance * 0.55 - nearestDistance * 0.18;
+				if (score >= bestScore) continue;
+
+				bestScore = score;
+				bestLeft = left;
+				bestTop = top;
+			}
+
+			return { left: bestLeft, top: bestTop };
+		}
+
+		private pseudoRandom(seed: number) {
+			return this.fraction(Math.sin(seed * 12.9898) * 43758.5453);
+		}
+
+		private fraction(value: number) {
+			return value - Math.floor(value);
+		}
+
+		private scheduleLayoutCards() {
+			if (this.dataset.ready !== "true" || this.layoutFrame !== 0) return;
+
+			this.layoutFrame = window.requestAnimationFrame(() => {
+				this.layoutFrame = 0;
+				this.layoutCards();
+			});
+		}
+
+		private getMinimumStageHeight() {
+			const rootFontSize = Number.parseFloat(
+				window.getComputedStyle(document.documentElement).fontSize,
+			);
+			const rem = Number.isFinite(rootFontSize) ? rootFontSize : 16;
+
+			if (window.innerWidth <= 640) {
+				return Math.min(31 * rem, window.innerHeight * 0.74);
+			}
+			if (window.innerWidth >= 768) return 40 * rem;
+			return 34 * rem;
+		}
+
+		private bindCard(card: HTMLElement) {
+			const signal = this.eventController?.signal;
+			if (!signal) return;
+
+			let pointerId = -1;
+			let startX = 0;
+			let startY = 0;
+			let initialLeft = 0;
+			let initialTop = 0;
+			let moved = false;
+			let settleTimer = 0;
+			let dragFrame = 0;
+			let nextLeft = 0;
+			let nextTop = 0;
+			let minLeft = 0;
+			let maxLeft = 0;
+			let minTop = 0;
+			let maxTop = 0;
+			const dragThreshold = 10;
+			const bringToFront = () => {
+				card.style.zIndex = String(this.nextZIndex++);
+			};
+
+			const writeDragPosition = () => {
+				dragFrame = 0;
+				card.style.left = `${nextLeft}px`;
+				card.style.top = `${nextTop}px`;
+			};
+
+			const onPointerMove = (event: PointerEvent) => {
+				if (event.pointerId !== pointerId) return;
+
+				const deltaX = event.clientX - startX;
+				const deltaY = event.clientY - startY;
+
+				const hasMoved = Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold;
+				if (hasMoved && !moved) {
+					card.dataset.dragging = "true";
+					card.dataset.layout = "dragged";
+				}
+				moved = moved || hasMoved;
+
+				nextLeft = this.clamp(initialLeft + deltaX, minLeft, maxLeft);
+				nextTop = this.clamp(initialTop + deltaY, minTop, maxTop);
+
+				if (dragFrame === 0) {
+					dragFrame = window.requestAnimationFrame(writeDragPosition);
+				}
+			};
+
+			const finishPointer = (event: PointerEvent) => {
+				if (event.pointerId !== pointerId) return;
+
+				if (card.hasPointerCapture(pointerId)) {
+					card.releasePointerCapture(pointerId);
+				}
+				card.removeEventListener("pointermove", onPointerMove);
+				card.removeEventListener("pointerup", finishPointer);
+				card.removeEventListener("pointercancel", finishPointer);
+
+				if (dragFrame !== 0) {
+					window.cancelAnimationFrame(dragFrame);
+					writeDragPosition();
+				}
+
+				pointerId = -1;
+				card.dataset.dragging = "false";
+				window.clearTimeout(settleTimer);
+				card.dataset.settling = "true";
+				settleTimer = window.setTimeout(() => {
+					delete card.dataset.settling;
+				}, 180);
+			};
+
+			card.addEventListener("pointerdown", (event: PointerEvent) => {
+				if (!(this.stage instanceof HTMLElement)) return;
+				if (!event.isPrimary || event.button !== 0) return;
+
+				pointerId = event.pointerId;
+				startX = event.clientX;
+				startY = event.clientY;
+				initialLeft = Number.parseFloat(card.style.left || "0");
+				initialTop = Number.parseFloat(card.style.top || "0");
+				nextLeft = initialLeft;
+				nextTop = initialTop;
+				moved = false;
+				const edgePadding = this.getEdgePadding();
+				minLeft = edgePadding;
+				maxLeft =
+					edgePadding +
+					Math.max(this.stage.clientWidth - card.offsetWidth - edgePadding * 2, 0);
+				minTop = edgePadding;
+				maxTop =
+					edgePadding +
+					Math.max(this.stage.clientHeight - card.offsetHeight - edgePadding * 2, 0);
+
+				card.style.zIndex = String(this.nextZIndex++);
+				card.dataset.dragging = "false";
+				delete card.dataset.settling;
+				card.setPointerCapture(pointerId);
+				card.addEventListener("pointermove", onPointerMove, { signal });
+				card.addEventListener("pointerup", finishPointer, { signal });
+				card.addEventListener("pointercancel", finishPointer, { signal });
+			}, { signal });
+
+			card.addEventListener(
+				"dragstart",
+				(event: DragEvent) => {
+					event.preventDefault();
+				},
+				{ signal },
+			);
+			card.addEventListener("pointerenter", () => {
+				bringToFront();
+			}, { signal });
+			card.addEventListener("focus", bringToFront, { signal });
+			this.cleanupFns.push(() => {
+				window.clearTimeout(settleTimer);
+				if (dragFrame !== 0) {
+					window.cancelAnimationFrame(dragFrame);
+				}
+			});
+		}
+
+		private clamp(value: number, min: number, max: number) {
+			return Math.min(Math.max(value, min), max);
+		}
+	}
+
+	if (!customElements.get("pictures-board")) {
+		customElements.define("pictures-board", PicturesBoard);
+	}
+</script>
