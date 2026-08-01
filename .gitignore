@@ -18,9 +18,11 @@ pnpm-debug.log*
 !.env.example
 !.env.*.example
 
-# macOS-specific files
+# operating system files
 .DS_Store
 Thumbs.db
+Desktop.ini
+ehthumbs.db
 
 .vercel
 
@@ -29,10 +31,22 @@ bun.lockb
 yarn.lock
 
 # ide
-.idea
+.vscode/
+.idea/
+.fleet/
+.history/
 *.iml
 .obsidian/
+*.swp
+*.swo
+*~
 
 # local caches
 .pnpm-store/
+.cache/
+.turbo/
 *.tsbuildinfo
+
+# test output
+coverage/
+.nyc_output/
