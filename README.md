@@ -2,7 +2,7 @@
 
 轻笺（Lightfolio）是一个基于 [Astro](https://astro.build) 和 [Fuwari](https://github.com/saicaca/fuwari) 定制的静态博客主题。
 
-作者博客：[anpier.cn](https://anpierr.com/)
+作者博客：[anpierr.com](https://anpierr.com/)
 
 仓库提供可直接运行的主题模板，不包含原博客的个人文章、相册、友链、评论系统、访问统计、分析追踪和私有部署配置。
 
